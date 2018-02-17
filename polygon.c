@@ -24,6 +24,7 @@ polygon create_polygon_from_file(char *filename, int c1, int c2, int c3, int x_r
 
 	FILE *fp;  
     
+    int size;
     fp = fopen(filename, "r");
     fscanf(fp, "%d", &pol.size);
 
@@ -49,6 +50,8 @@ polygon create_polygon_from_file(char *filename, int c1, int c2, int c3, int x_r
     }
     
     fclose(fp);
+
+    return pol;
 }
 
 void draw_polygon(polygon pol, framebuffer f){
@@ -56,11 +59,11 @@ void draw_polygon(polygon pol, framebuffer f){
     int x,y,temp;
     int xi[pol.size];
     float slope[pol.size];
-
+   
     // Initiate Variables
     pol.arr[pol.size][0]=pol.arr[0][0];
     pol.arr[pol.size][1]=pol.arr[0][1];
-    
+  
     // Calculate slope
     for(i=0;i<pol.size;i++) {
         dy=pol.arr[i+1][1]-pol.arr[i][1];
@@ -71,7 +74,7 @@ void draw_polygon(polygon pol, framebuffer f){
             slope[i]=(float) dx/dy;
         }
     }
-
+  
     // Fill color
     for(y=0;y<pol.y_resolution;y++) {
         k=0;
