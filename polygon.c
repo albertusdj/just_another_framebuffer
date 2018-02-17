@@ -14,6 +14,15 @@
 #include "framebuffer.h"
 #include "polygon.h"
 
+void allocate_memory(polygon *pol, int size){
+	pol->size = size;
+	pol->arr = (int **)malloc((pol->size+1) * sizeof(int *));
+
+	for (int i=0; i<(pol->size+1); i++){
+         pol->arr[i] = (int *)malloc(2 * sizeof(int));
+    }
+}
+
 polygon create_polygon_from_file(char *filename, int c1, int c2, int c3, int x_resolution, int y_resolution){
 	polygon pol;
 	pol.c1 = c1;
@@ -28,11 +37,7 @@ polygon create_polygon_from_file(char *filename, int c1, int c2, int c3, int x_r
     fp = fopen(filename, "r");
     fscanf(fp, "%d", &pol.size);
 
-    pol.arr = (int **)malloc((pol.size+1) * sizeof(int *));
-    
-    for (int i=0; i<(pol.size+1); i++){
-         pol.arr[i] = (int *)malloc(2 * sizeof(int));
-    }
+    allocate_memory(&pol, pol.size);
 
     int i = 0;
     int j = 0;
@@ -50,6 +55,32 @@ polygon create_polygon_from_file(char *filename, int c1, int c2, int c3, int x_r
     }
     
     fclose(fp);
+
+    //Find center of polygon
+    int maxX = INT_MIN;
+    int minX = INT_MAX;
+
+    int maxY = INT_MIN;
+    int minY = INT_MAX;
+
+    for(int i=0; i<pol.size; i++){
+    	if(maxX < pol.arr[i][0]){
+    		maxX = pol.arr[i][0];
+    	}
+    	if(minX > pol.arr[i][0]){
+    		minX = pol.arr[i][0];
+    	}
+
+    	if(maxY < pol.arr[i][1]){
+    		maxY = pol.arr[i][1];
+    	}
+    	if(minY > pol.arr[i][1]){
+    		minY = pol.arr[i][1];
+    	}
+    }
+
+    pol.x_center = minX + (maxX - minX)/2;
+    pol.y_center = minY + (maxY - minY)/2;
 
     return pol;
 }
@@ -103,4 +134,32 @@ void draw_polygon(polygon pol, framebuffer f){
             draw_line(l, f);
         }
     }
+}
+
+void clear_polygon(polygon *pol){
+	pol->c1 = 0;
+	pol->c2 = 0;
+	pol->c3 = 0;
+}
+
+polygon dilate(polygon pol, int scale, int x_center, int y_center){
+	polygon res;	
+
+	res.c1 = pol.c1;
+	res.c2 = pol.c2;
+	res.c3 = pol.c3;
+	res.size = pol.size;
+	res.x_resolution = pol.x_resolution;
+	res.y_resolution = pol.y_resolution;
+	res.x_center = pol.x_center;
+	res.y_center = pol.y_center;
+
+	allocate_memory(&res, res.size);
+
+    for (int i = 0; i < pol.size; i++) {
+        res.arr[i][0] = pol.arr[i][0] * scale - (scale-1) * x_center;
+        res.arr[i][1] = pol.arr[i][1] * scale - (scale-1) * y_center;
+    }
+
+    return res;
 }

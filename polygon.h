@@ -23,10 +23,16 @@ typedef struct polygon{
 	int c3;
 	int x_resolution;
 	int y_resolution;
+	int x_center;
+	int y_center;
 }polygon;
 
 polygon create_polygon_from_file(char *filename, int c1, int c2, int c3, int x_resolution, int y_resolution);
 
 void draw_polygon(polygon pol, framebuffer f);
+
+void clear_polygon(polygon *pol);
+
+polygon dilate(polygon pol, int scale, int x_center, int y_center);
 
 #endif
