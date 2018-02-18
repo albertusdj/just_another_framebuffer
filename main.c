@@ -11,13 +11,16 @@ int main(){
 	draw_polygon(frame, f);
 
 	//draw_polygon(plane_origin, f);
-	printf("x_center:%d\ny_center:%d\n", plane_origin.x_center, plane_origin.y_center);
+	//printf("x_center:%d\ny_center:%d\n", plane_origin.x_center, plane_origin.y_center);
 
-	for(int scale=1; scale<=10; scale++){
-		polygon plane = dilate(plane_origin, scale, plane_origin.x_center,plane_origin.y_center);
+	for(int scale=1; scale<=8; scale++){
+		polygon plane = dilate(plane_origin, frame, scale, plane_origin.x_center,plane_origin.y_center);
 		draw_polygon(plane, f);
 		sleep(1);
-		clear_polygon(&plane);
+		if (scale != 8) {
+			clear_polygon(&plane);
+		}
 		draw_polygon(plane, f);
+		printf("\n");
 	}
 }
