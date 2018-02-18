@@ -136,10 +136,10 @@ void draw_polygon(polygon pol, framebuffer f){
     }
 }
 
-void clear_polygon(polygon *pol){
-	pol->c1 = 255;
-	pol->c2 = 255;
-	pol->c3 = 255;
+void set_color_polygon(polygon *pol, int c1, int c2, int c3){
+	pol->c1 = c1;
+	pol->c2 = c2;
+	pol->c3 = c3;
 }
 
 int findIntersect (int is_y_known, int point_idx, int x1, int y1, int x2, int y2, polygon frame) {
@@ -343,6 +343,48 @@ polygon dilate(polygon pol, polygon frame, int scale, int x_center, int y_center
     //printf("\n");
 
     //printf("Dilatation ended with new size of %d. Returning results ...\n", res.size);
+
+    return res;
+}
+
+polygon translate(polygon pol, int x_distance, int y_distance){
+	polygon res;
+    allocate_memory(&res, pol.size);
+
+    res.c1 = pol.c1;
+	res.c2 = pol.c2;
+	res.c3 = pol.c3;
+	res.size = pol.size;
+	res.x_resolution = pol.x_resolution;
+	res.y_resolution = pol.y_resolution;
+	res.x_center = pol.x_center;
+	res.y_center = pol.y_center;
+
+	for(int i=0; i<pol.size; i++){
+		res.arr[i][0] = pol.arr[i][0] + x_distance;
+		res.arr[i][1] = pol.arr[i][1] + y_distance;
+	}
+
+	return res;
+}
+
+polygon rotate(polygon pol, int x_center, int y_center) {
+    polygon res;
+    allocate_memory(&res, pol.size);
+
+    res.c1 = pol.c1;
+	res.c2 = pol.c2;
+	res.c3 = pol.c3;
+	res.size = pol.size;
+	res.x_resolution = pol.x_resolution;
+	res.y_resolution = pol.y_resolution;
+	res.x_center = pol.x_center;
+	res.y_center = pol.y_center;
+
+    for (int i = 0; i < res.size; i++) {
+        res.arr[i][0] = (int)((float)(pol.arr[i][0]-x_center)*sqrt(2.0)/2.0 - (float)(pol.arr[i][1]-y_center)*sqrt(2.0)/2.0) + x_center;
+     	res.arr[i][1] = (int)((float)(pol.arr[i][0]-x_center)*sqrt(2.0)/2.0 + (float)(pol.arr[i][1]-y_center)*sqrt(2.0)/2.0) + y_center;
+    }
 
     return res;
 }
