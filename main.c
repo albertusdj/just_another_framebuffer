@@ -25,13 +25,30 @@ char status;
 int current_x_center;
 int current_y_center;
 
-void dilate_all(int scale){
-	plane = dilate(plane_origin, frame, current_scale, current_x_center, current_y_center);
-	pilot = dilate(pilot_origin, frame, current_scale, current_x_center, current_y_center);
-	rotor1 = dilate(rotor1_origin, frame, current_scale, current_x_center, current_y_center);
-	rotor2 = dilate(rotor2_origin, frame, current_scale, current_x_center, current_y_center);
-	rotated_rotor1 = dilate(rotated_rotor1_origin, frame, current_scale, current_x_center, current_y_center);
-	rotated_rotor2 = dilate(rotated_rotor2_origin, frame, current_scale, current_x_center, current_y_center);
+// void dilate_all(int scale){
+// 	plane = dilate(plane_origin, frame, current_scale, current_x_center, current_y_center);
+// 	pilot = dilate(pilot_origin, frame, current_scale, current_x_center, current_y_center);
+// 	rotor1 = dilate(rotor1_origin, frame, current_scale, current_x_center, current_y_center);
+// 	rotor2 = dilate(rotor2_origin, frame, current_scale, current_x_center, current_y_center);
+// 	rotated_rotor1 = dilate(rotated_rotor1_origin, frame, current_scale, current_x_center, current_y_center);
+// 	rotated_rotor2 = dilate(rotated_rotor2_origin, frame, current_scale, current_x_center, current_y_center);
+// }
+
+void update_all(int dx, int dy) {
+	plane = translate(plane_origin, frame, dx, dy);
+	pilot = translate(pilot_origin, frame, dx, dy);
+	rotor1 = translate(rotor1_origin, frame, dx, dy);
+	rotor2 = translate(rotor2_origin, frame, dx, dy);
+	rotated_rotor1 = translate(rotated_rotor1_origin, frame, dx, dy);
+	rotated_rotor2 = translate(rotated_rotor2_origin, frame, dx, dy);
+
+	plane = dilate(plane, frame, current_scale, current_x_center, current_y_center);
+	pilot = dilate(pilot, frame, current_scale, current_x_center, current_y_center);
+	rotor1 = dilate(rotor1, frame, current_scale, current_x_center, current_y_center);
+	rotor2 = dilate(rotor2, frame, current_scale, current_x_center, current_y_center);
+	rotated_rotor1 = dilate(rotated_rotor1, frame, current_scale, current_x_center, current_y_center);
+	rotated_rotor2 = dilate(rotated_rotor2, frame, current_scale, current_x_center, current_y_center);
+
 }
 
 
@@ -81,7 +98,10 @@ int main(){
 	int limit = 4;
 	int move_count = 0;
 	int dx = 5;
+	int dy;
 	char direction = 'r';
+	int current_x = current_x_center;
+	int current_y = current_y_center;
 
 	status = 'o';
 
@@ -138,14 +158,18 @@ int main(){
 			dx = 5;
 			direction = 'r';
 		}
+		current_x += dx;
+		current_y += dy;
 
+		update_all(current_x,current_y);
+		//dilate_all(current_scale);
 
-		plane = translate(plane, frame, dx, 0);
-		pilot = translate(pilot, frame, dx, 0);
-		rotor1 = translate(rotor1, frame, dx, 0);
-		rotor2 = translate(rotor2, frame, dx, 0);
-		rotated_rotor1 = translate(rotated_rotor1, frame, dx, 0);
-		rotated_rotor2 = translate(rotated_rotor2, frame, dx, 0);
+		// plane = translate(plane, frame, dx, 0);
+		// pilot = translate(pilot, frame, dx, 0);
+		// rotor1 = translate(rotor1, frame, dx, 0);
+		// rotor2 = translate(rotor2, frame, dx, 0);
+		// rotated_rotor1 = translate(rotated_rotor1, frame, dx, 0);
+		// rotated_rotor2 = translate(rotated_rotor2, frame, dx, 0);
 
 		
 		current_x_center = plane.x_center;
@@ -154,13 +178,15 @@ int main(){
 		if(status=='z'){
 			if(current_scale < MAX_ZOOM_IN){
 				current_scale++;
-				dilate_all(current_scale);
+				update_all(current_x,current_y);
+				//dilate_all(current_scale);
 			}
 		}
 		else if(status=='x'){
 			if(current_scale > MIN_ZOOM_OUT){
             	current_scale--;
-				dilate_all(current_scale);
+            	update_all(current_x,current_y);
+				//dilate_all(current_scale);
             }
 		}
 		status = 'o';

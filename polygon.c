@@ -349,23 +349,65 @@ polygon dilate(polygon pol, polygon frame, int scale, int x_center, int y_center
 
 polygon translate(polygon pol, polygon frame, int x_distance, int y_distance){
 	polygon res;
-    allocate_memory(&res, pol.size);
+
+    int x1, y1, x2, y2;
 
     res.c1 = pol.c1;
 	res.c2 = pol.c2;
 	res.c3 = pol.c3;
-	res.size = pol.size;
+	res.size = pol.size * 2 + 1;
 	res.x_resolution = pol.x_resolution;
 	res.y_resolution = pol.y_resolution;
 	res.x_center = pol.x_center + x_distance;
 	res.y_center = pol.y_center + y_distance;
 
-	for(int i=0; i<pol.size; i++){
-		res.arr[i][0] = pol.arr[i][0] + x_distance;
-		res.arr[i][1] = pol.arr[i][1] + y_distance;
+	allocate_memory(&res, pol.size);
+	res.size = 0;
+
+	for(int i=0; i<(pol.size-1); i++){
+
+		x1 = pol.arr[i][0] + x_distance;
+        y1 = pol.arr[i][1] + y_distance;
+		//printf("Found (%d,%d) to ",x1,y1);
+
+        x2 = pol.arr[i+1][0] + x_distance;
+        y2 = pol.arr[i+1][1] + y_distance;
+        //printf("(%d,%d) ",x2,y2);
+
+		// res.arr[i][0] = pol.arr[i][0] + x_distance;
+		// res.arr[i][1] = pol.arr[i][1] + y_distance;
+
+        if (x1 < frame.arr[0][0]) {
+			add_point_to_polygon(&res, frame.arr[0][0],findIntersect(0,1,x1,y1,x2,y2,frame));
+		} else if (x1 > frame.arr[1][0]) {
+			add_point_to_polygon(&res, frame.arr[1][0],findIntersect(0,1,x1,y1,x2,y2,frame));
+		} else {
+			if (y1 < frame.arr[0][1]) {
+				add_point_to_polygon(&res, findIntersect(1,1,x1,y1,x2,y2,frame),frame.arr[0][1]);
+			} else if (y1 > frame.arr[2][1]) {
+				add_point_to_polygon(&res, findIntersect(1,1,x1,y1,x2,y2,frame),frame.arr[2][1]);
+			} else {
+				add_point_to_polygon(&res, x1,y1);
+			}
+		}
+
+		if (x2 < frame.arr[0][0]) {
+			add_point_to_polygon(&res, frame.arr[0][0],findIntersect(0,2,x1,y1,x2,y2,frame));
+		} else if (x2 > frame.arr[1][0]) {
+			add_point_to_polygon(&res, frame.arr[1][0],findIntersect(0,2,x1,y1,x2,y2,frame));
+		} else {
+			if (y2 < frame.arr[0][1]) {
+				add_point_to_polygon(&res, findIntersect(1,2,x1,y1,x2,y2,frame),frame.arr[0][1]);
+			} else if (y2 > frame.arr[2][1]) {
+				add_point_to_polygon(&res, findIntersect(1,2,x1,y1,x2,y2,frame),frame.arr[2][1]);
+			} else {
+				add_point_to_polygon(&res, x2,y2);
+			}
+		}
+
 	}
 
-	res = dilate(res, frame, 1, 0, 0);
+	//res = dilate(res, frame, 1, 0, 0);
 
 	return res;
 }
