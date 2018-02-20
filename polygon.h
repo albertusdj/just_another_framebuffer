@@ -41,7 +41,7 @@ void swap_pidx(int *id);
 
 polygon dilate(polygon pol, polygon frame, int scale, int x_center, int y_center);
 
-polygon translate(polygon pol, int x_distance, int y_distance);
+polygon translate(polygon pol, polygon frame, int x_distance, int y_distance);
 
 polygon rotate(polygon pol, int x_center, int y_center);
 

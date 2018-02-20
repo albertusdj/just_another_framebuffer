@@ -347,7 +347,7 @@ polygon dilate(polygon pol, polygon frame, int scale, int x_center, int y_center
     return res;
 }
 
-polygon translate(polygon pol, int x_distance, int y_distance){
+polygon translate(polygon pol, polygon frame, int x_distance, int y_distance){
 	polygon res;
     allocate_memory(&res, pol.size);
 
@@ -357,13 +357,15 @@ polygon translate(polygon pol, int x_distance, int y_distance){
 	res.size = pol.size;
 	res.x_resolution = pol.x_resolution;
 	res.y_resolution = pol.y_resolution;
-	res.x_center = pol.x_center;
-	res.y_center = pol.y_center;
+	res.x_center = pol.x_center + x_distance;
+	res.y_center = pol.y_center + y_distance;
 
 	for(int i=0; i<pol.size; i++){
 		res.arr[i][0] = pol.arr[i][0] + x_distance;
 		res.arr[i][1] = pol.arr[i][1] + y_distance;
 	}
+
+	res = dilate(res, frame, 1, 0, 0);
 
 	return res;
 }
