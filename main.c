@@ -22,14 +22,16 @@ polygon rotated_rotor1;
 polygon rotated_rotor2;
 int current_scale;
 char status;
+int current_x_center;
+int current_y_center;
 
 void dilate_all(int scale){
-	plane = dilate(plane_origin, frame, current_scale, plane.x_center, plane.y_center);
-	pilot = dilate(pilot_origin, frame, current_scale, plane.x_center, plane.y_center);
-	rotor1 = dilate(rotor1_origin, frame, current_scale, plane.x_center, plane.y_center);
-	rotor2 = dilate(rotor2_origin, frame, current_scale, plane.x_center, plane.y_center);
-	rotated_rotor1 = dilate(rotated_rotor1_origin, frame, current_scale, plane.x_center, plane.y_center);
-	rotated_rotor2 = dilate(rotated_rotor2_origin, frame, current_scale, plane.x_center, plane.y_center);
+	plane = dilate(plane_origin, frame, current_scale, current_x_center, current_y_center);
+	pilot = dilate(pilot_origin, frame, current_scale, current_x_center, current_y_center);
+	rotor1 = dilate(rotor1_origin, frame, current_scale, current_x_center, current_y_center);
+	rotor2 = dilate(rotor2_origin, frame, current_scale, current_x_center, current_y_center);
+	rotated_rotor1 = dilate(rotated_rotor1_origin, frame, current_scale, current_x_center, current_y_center);
+	rotated_rotor2 = dilate(rotated_rotor2_origin, frame, current_scale, current_x_center, current_y_center);
 }
 
 
@@ -121,18 +123,6 @@ int main(){
 		}
 
 		draw_polygon(frame, f);
-		// set_color_polygon(&plane, 255, 255, 255);
-		// set_color_polygon(&pilot, 0, 255, 0);
-		// set_color_polygon(&rotor1, 0, 255, 0);
-		// set_color_polygon(&rotor2, 0, 255, 0);
-		// set_color_polygon(&rotated_rotor1, 0, 255, 0);
-		// set_color_polygon(&rotated_rotor2, 0, 255, 0);
-		// draw_polygon(plane, f);
-		// draw_polygon(pilot, f);
-		// draw_polygon(rotor1, f);
-		// draw_polygon(rotor2, f);
-		// draw_polygon(rotated_rotor1, f);
-		// draw_polygon(rotated_rotor2, f);
 
 		if(direction=='r' && move_count<limit){
 			move_count++;
@@ -149,13 +139,18 @@ int main(){
 			direction = 'r';
 		}
 
+
 		plane = translate(plane, frame, dx, 0);
 		pilot = translate(pilot, frame, dx, 0);
 		rotor1 = translate(rotor1, frame, dx, 0);
 		rotor2 = translate(rotor2, frame, dx, 0);
 		rotated_rotor1 = translate(rotated_rotor1, frame, dx, 0);
 		rotated_rotor2 = translate(rotated_rotor2, frame, dx, 0);
+
 		
+		current_x_center = plane.x_center;
+		current_y_center = plane.y_center;
+
 		if(status=='z'){
 			if(current_scale < MAX_ZOOM_IN){
 				current_scale++;
