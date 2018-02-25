@@ -54,14 +54,14 @@ void init_polygons(char* filename, int c1, int c2, int c3, int x_resolution, int
     	while (j < polygons[i].size * 2) {
     		fscanf(fp, "%d", &temp);
     		if(j%2==0){
-	            polygons[i].arr[k][0] = temp;
-	            if (temp < minx) minx = temp;
-	            if (temp > maxx) maxx = temp;
+	            polygons[i].arr[k][0] = temp+100;
+	            if (temp+100 < minx) minx = temp+100;
+	            if (temp+100 > maxx) maxx = temp+100;
 	        }
 	        else{
-	            polygons[i].arr[k][1] = temp;
-	            if (temp < miny) miny = temp;
-	            if (temp > maxy) maxy = temp;
+	            polygons[i].arr[k][1] = temp+100;
+	            if (temp+100 < miny) miny = temp+100;
+	            if (temp+100 > maxy) maxy = temp+100;
 	            k++;
 	        }
 	        j++;
@@ -162,7 +162,7 @@ void eraseImage() {
 		polygons[i].c1 = 0;
 		polygons[i].c2 = 0;
 		polygons[i].c3 = 0;
-		draw_polygon(polygons[i], f);
+		// draw_polygon(polygons[i], f);
 		draw_polygon(viewport(polygons[i]), f);
 		polygons[i].c1 = c1;
 		polygons[i].c2 = c2;
@@ -171,25 +171,17 @@ void eraseImage() {
 
 	// Erase window
 	drawWindow(0,0,0);
+	for (int i=0; i<nPolygon; i++) {
+		draw_polygon(polygons_origin[i], f);
+	}
 }
 
 void updateImage() {
-
+	// Update images
 	for (int i=0; i<nPolygon; i++) {
 		polygons[i] = translate(polygons_origin[i], window, 0, 0);
-		draw_polygon(polygons[i], f);
 		draw_polygon(viewport(polygons[i]), f);
 	}
-
-	// // Update image 1
-	// image = translate(image_origin, window, 0, 0);
-	// draw_polygon(image,f);
-	// draw_polygon(viewport(image), f);
-
-	// // Update image 2
-	// image2 = translate(image2_origin, window, 0, 0);
-	// draw_polygon(image2,f);
-	// draw_polygon(viewport(image2), f);
 
 	// Update window
 	drawWindow(255,255,255);
@@ -234,29 +226,46 @@ void* transformWindow(void *arg) {
     system ("/bin/stty cooked");
 }
 
+int isWValid() {
+	return window.arr[0][1] > 100 && window.arr[1][1] > 100 && window.arr[2][1] > 100 && window.arr[3][1] > 100;
+}
+
+int isAValid() {
+	return window.arr[0][0] > 120 && window.arr[1][0] > 120 && window.arr[2][0] > 120 && window.arr[3][0] > 120;
+}
+
+int isSValid() {
+	return window.arr[0][1] < 480 && window.arr[1][1] < 480 && window.arr[2][1] < 480 && window.arr[3][1] < 480;
+}
+
+int isDValid() {
+	return window.arr[0][0] < 460 && window.arr[1][0] < 460 && window.arr[2][0] < 460 && window.arr[3][0] < 460;
+}
+
+int isDilateValid(int d) {
+	return window.arr[0][1] >= 100+d*20 && window.arr[1][1] >= 100+d*20 && window.arr[2][1] >= 100+d*20 && window.arr[3][1] >= 100+d*20 &&
+		window.arr[0][0] >= 120+d*20 && window.arr[1][0] >= 120+d*20 && window.arr[2][0] >= 120+d*20 && window.arr[3][0] >= 120+d*20 &&
+		window.arr[0][1] <= 480-d*20 && window.arr[1][1] <= 480-d*20 && window.arr[2][1] <= 480-d*20 && window.arr[3][1] <= 480-d*20 &&
+		window.arr[0][0] <= 460-d*20 && window.arr[1][0] <= 460-d*20 && window.arr[2][0] <= 460-d*20 && window.arr[3][0] <= 460-d*20;
+}
+
 int main(){
 	f = init();
 	
 	world = create_polygon_from_file("frame_world_test.txt", 255, 255, 255, 1366, 768);
 	window_origin = create_polygon_from_file("frame_window_test.txt", 255, 255, 255, 1366, 768);
 	view = create_polygon_from_file("frame_view_test.txt", 255, 255, 255, 1366, 768);
-	//image_origin = create_polygon_from_file("image_test.txt", 0, 255, 0, 1366, 768);
-	//image2_origin = create_polygon_from_file("image2_test.txt", 255, 0, 0, 1366, 768);
 
 	init_polygons("output.txt", 0, 255, 0, 1366, 768);
 
 	window = translate(window_origin, world, 0, 0);
-	//image = translate(image_origin, window, 0, 0);
-	//image2 = translate(image2_origin, window, 0, 0);
+
 	for (int i=0; i<nPolygon; i++) {
 		polygons[i] = translate(polygons_origin[i], window, 0, 0);
-		draw_polygon(polygons[i], f);
+		draw_polygon(polygons_origin[i], f);
 		draw_polygon(viewport(polygons[i]), f);
 	}
-	//draw_polygon(image, f);
-	//draw_polygon(image2, f);
-	//draw_polygon(viewport(image), f);
-	//draw_polygon(viewport(image2), f);
+
 	drawWindow(255,255,255);
 	drawView(255,255,255);
 
@@ -267,9 +276,10 @@ int main(){
 
 	int dWindowX = 0;
 	int dWindowY = 0;
+	int currWindow = 1;
 
 	while(1) {
-		if(status=='w'){
+		if(status=='w' && isWValid()==1){
 			eraseImage();
 			window.arr[0][1] -= 10;
 			window.arr[1][1] -= 10;
@@ -278,7 +288,7 @@ int main(){
 			dWindowY -= 10;
 			updateImage();
 		}
-		else if(status=='a'){
+		else if(status=='a' && isAValid()==1){
 			eraseImage();
 			window.arr[0][0] -= 10;
 			window.arr[1][0] -= 10;
@@ -287,7 +297,7 @@ int main(){
 			dWindowX -= 10;
 			updateImage();
 		}
-		else if(status=='s'){
+		else if(status=='s' && isSValid()==1){
 			eraseImage();
 			window.arr[0][1] += 10;
 			window.arr[1][1] += 10;
@@ -296,7 +306,7 @@ int main(){
 			dWindowY += 10;
 			updateImage();
 		}
-		else if(status=='d'){
+		else if(status=='d' && isDValid()==1){
 			eraseImage();
 			window.arr[0][0] += 10;
 			window.arr[1][0] += 10;
@@ -305,24 +315,28 @@ int main(){
 			dWindowX += 10;
 			updateImage();
 		}
-		else if(status=='1'){
+		else if(status=='1' && (currWindow>1 || isDilateValid(1-currWindow)==1)){
 			eraseImage();
 			window = dilate(translate(window_origin,world,dWindowX,dWindowY), world, 1, (window.arr[0][0]+window.arr[1][0])/2, (window.arr[0][1]+window.arr[2][1])/2);
+			currWindow = 1;
 			updateImage();
 		}
-		else if(status=='2'){
+		else if(status=='2' && (currWindow>2 || isDilateValid(2-currWindow)==1)){
 			eraseImage();
 			window = dilate(translate(window_origin,world,dWindowX,dWindowY), world, 2, (window.arr[0][0]+window.arr[1][0])/2, (window.arr[0][1]+window.arr[2][1])/2);
+			currWindow = 2;
 			updateImage();
 		}
-		else if(status=='3'){
+		else if(status=='3' && (currWindow>3 || isDilateValid(3-currWindow)==1)){
 			eraseImage();
 			window = dilate(translate(window_origin,world,dWindowX,dWindowY), world, 3, (window.arr[0][0]+window.arr[1][0])/2, (window.arr[0][1]+window.arr[2][1])/2);
+			currWindow = 3;
 			updateImage();
 		}
-		else if(status=='4'){
+		else if(status=='4' && (currWindow>4 || isDilateValid(4-currWindow)==1)){
 			eraseImage();
 			window = dilate(translate(window_origin,world,dWindowX,dWindowY), world, 4, (window.arr[0][0]+window.arr[1][0])/2, (window.arr[0][1]+window.arr[2][1])/2);
+			currWindow = 4;
 			updateImage();
 		}
 	}
