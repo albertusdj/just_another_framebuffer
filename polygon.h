@@ -27,6 +27,8 @@ typedef struct polygon{
 	int y_center;
 }polygon;
 
+void allocate_memory(polygon *pol, int size);
+
 polygon create_polygon_from_file(char *filename, int c1, int c2, int c3, int x_resolution, int y_resolution);
 
 void draw_polygon(polygon pol, framebuffer f);
