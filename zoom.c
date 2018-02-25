@@ -12,8 +12,67 @@ polygon image;
 polygon image_origin;
 polygon image2;
 polygon image2_origin;
+polygon *polygons;
+polygon *polygons_origin;
+int nPolygon;
 int current_scale;
 char status;
+
+void init_polygons(char* filename, int c1, int c2, int c3, int x_resolution, int y_resolution) {
+	FILE *fp;
+     
+    fp = fopen(filename, "r");
+    fscanf(fp, "%d", &nPolygon);
+
+    free(polygons);
+    polygons = (polygon *) malloc (nPolygon * sizeof(polygon));
+    polygons_origin = (polygon *) malloc (nPolygon * sizeof(polygon));
+
+    int i = 0;
+    int j,k, minx, miny, maxx, maxy;
+    maxx = 0;
+    maxy = 0;
+    minx = x_resolution;
+    miny = y_resolution;
+
+    int temp;
+    while(i < nPolygon){
+    	fscanf(fp, "%d", &temp);
+    	polygons[i].size = temp;
+    	polygons[i].c1 = c1;
+		polygons[i].c2 = c2;
+		polygons[i].c3 = c3;
+		polygons[i].x_resolution = x_resolution;
+		polygons[i].y_resolution = y_resolution;
+
+		allocate_memory(&polygons[i],polygons[i].size);
+    	allocate_memory(&polygons_origin[i], polygons[i].size);
+
+		j = 0;
+    	k = 0;
+
+    	while (j < polygons[i].size * 2) {
+    		fscanf(fp, "%d", &temp);
+    		if(j%2==0){
+	            polygons[i].arr[k][0] = temp;
+	            if (temp < minx) minx = temp;
+	            if (temp > maxx) maxx = temp;
+	        }
+	        else{
+	            polygons[i].arr[k][1] = temp;
+	            if (temp < miny) miny = temp;
+	            if (temp > maxy) maxy = temp;
+	            k++;
+	        }
+	        j++;
+    	}
+    	polygons_origin[i] = translate(polygons[i], world, 0, 0);
+    	i++;
+    }
+
+    fclose(fp);
+    printf("Load done\n");
+}
 
 polygon viewport(polygon p) {
 	// Initate variables
@@ -95,40 +154,42 @@ void drawView(int c1, int c2, int c3) {
 }
 
 void eraseImage() {
-	// Erase image 1
-	image.c1 = 0;
-	image.c2 = 0;
-	image.c3 = 0;
-	draw_polygon(image,f);
-	draw_polygon(viewport(image), f);
-	image.c1 = 0;
-	image.c2 = 255;
-	image.c3 = 0;
-
-	// Erase image 2
-	image2.c1 = 0;
-	image2.c2 = 0;
-	image2.c3 = 0;
-	draw_polygon(image2,f);
-	draw_polygon(viewport(image2), f);
-	image2.c1 = 255;
-	image2.c2 = 0;
-	image2.c3 = 0;
+	int c1, c2, c3;
+	for (int i=0; i<nPolygon; i++) {
+		c1 = polygons[i].c1;
+		c2 = polygons[i].c2;
+		c3 = polygons[i].c3;
+		polygons[i].c1 = 0;
+		polygons[i].c2 = 0;
+		polygons[i].c3 = 0;
+		draw_polygon(polygons[i], f);
+		draw_polygon(viewport(polygons[i]), f);
+		polygons[i].c1 = c1;
+		polygons[i].c2 = c2;
+		polygons[i].c3 = c3;
+	}
 
 	// Erase window
 	drawWindow(0,0,0);
 }
 
 void updateImage() {
-	// Update image 1
-	image = translate(image_origin, window, 0, 0);
-	draw_polygon(image,f);
-	draw_polygon(viewport(image), f);
 
-	// Update image 2
-	image2 = translate(image2_origin, window, 0, 0);
-	draw_polygon(image2,f);
-	draw_polygon(viewport(image2), f);
+	for (int i=0; i<nPolygon; i++) {
+		polygons[i] = translate(polygons_origin[i], window, 0, 0);
+		draw_polygon(polygons[i], f);
+		draw_polygon(viewport(polygons[i]), f);
+	}
+
+	// // Update image 1
+	// image = translate(image_origin, window, 0, 0);
+	// draw_polygon(image,f);
+	// draw_polygon(viewport(image), f);
+
+	// // Update image 2
+	// image2 = translate(image2_origin, window, 0, 0);
+	// draw_polygon(image2,f);
+	// draw_polygon(viewport(image2), f);
 
 	// Update window
 	drawWindow(255,255,255);
@@ -179,16 +240,23 @@ int main(){
 	world = create_polygon_from_file("frame_world_test.txt", 255, 255, 255, 1366, 768);
 	window_origin = create_polygon_from_file("frame_window_test.txt", 255, 255, 255, 1366, 768);
 	view = create_polygon_from_file("frame_view_test.txt", 255, 255, 255, 1366, 768);
-	image_origin = create_polygon_from_file("image_test.txt", 0, 255, 0, 1366, 768);
-	image2_origin = create_polygon_from_file("image2_test.txt", 255, 0, 0, 1366, 768);
+	//image_origin = create_polygon_from_file("image_test.txt", 0, 255, 0, 1366, 768);
+	//image2_origin = create_polygon_from_file("image2_test.txt", 255, 0, 0, 1366, 768);
+
+	init_polygons("output.txt", 0, 255, 0, 1366, 768);
 
 	window = translate(window_origin, world, 0, 0);
-	image = translate(image_origin, window, 0, 0);
-	image2 = translate(image2_origin, window, 0, 0);
-	draw_polygon(image, f);
-	draw_polygon(image2, f);
-	draw_polygon(viewport(image), f);
-	draw_polygon(viewport(image2), f);
+	//image = translate(image_origin, window, 0, 0);
+	//image2 = translate(image2_origin, window, 0, 0);
+	for (int i=0; i<nPolygon; i++) {
+		polygons[i] = translate(polygons_origin[i], window, 0, 0);
+		draw_polygon(polygons[i], f);
+		draw_polygon(viewport(polygons[i]), f);
+	}
+	//draw_polygon(image, f);
+	//draw_polygon(image2, f);
+	//draw_polygon(viewport(image), f);
+	//draw_polygon(viewport(image2), f);
 	drawWindow(255,255,255);
 	drawView(255,255,255);
 
