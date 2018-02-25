@@ -26,6 +26,7 @@ char status;
 int current_x_center;
 int current_y_center;
 int nPolygon;
+int current;
 
 // void dilate_all(int scale){
 // 	plane = dilate(plane_origin, frame, current_scale, current_x_center, current_y_center);
@@ -43,6 +44,7 @@ void init_polygons(char* filename, int c1, int c2, int c3, int x_resolution, int
     fscanf(fp, "%d", &nPolygon);
     // printf("Preparing to read %d polygon(s)\n",nPolygon);
 
+    free(polygons);
     polygons = (polygon *)malloc(nPolygon * sizeof(polygon));
 
     int i = 0;
@@ -93,7 +95,7 @@ void init_polygons(char* filename, int c1, int c2, int c3, int x_resolution, int
 
     fclose(fp);
 
-    printf("Xmax = %d Xmin = %d Ymax = %d Ymin = %d\n", maxx, minx, maxy, miny);
+    //printf("Xmax = %d Xmin = %d Ymax = %d Ymin = %d\n", maxx, minx, maxy, miny);
 }
 
 void print_polygons(char* filename, int c1, int c2, int c3, int x_resolution, int y_resolution) {
@@ -101,7 +103,6 @@ void print_polygons(char* filename, int c1, int c2, int c3, int x_resolution, in
 	for (int i=0; i<nPolygon; i++) {
 		draw_polygon(polygons[i], f);
 	}
-	free(polygons);
 }
 
 void update_all(int dx, int dy) {
@@ -140,10 +141,33 @@ void* zoom(void *arg){
     system ("/bin/stty cooked");
 }
 
+void* execute(void *arg){
+	system ("/bin/stty raw");
+    char c;
+    while (c = getchar()) {
+        if (c == 'l' && current == 0) {
+            print_polygons("kantin.txt", 0, 0, 255, 1366, 768);
+            current = 1;
+        }
+        else if (c == 'l' && current == 1) {
+            draw_polygon(frame, f);
+
+			print_polygons("output_origin.txt", 0, 255, 0, 1366, 768);
+
+			current = 0;
+        }
+        else{
+        	break;
+        }
+    }
+    system ("/bin/stty cooked");
+}
+
 int main(){
 	f = init();
 	
 	current_scale = 1;
+	current = 0;
 
 	frame = create_polygon_from_file("frame.txt", 255, 255, 255, 1366, 768);
 	/*plane_origin = create_polygon_from_file("plane.txt", 0, 255, 0, 1366, 768);
@@ -162,7 +186,15 @@ int main(){
 
 	draw_polygon(frame, f);
 
-	print_polygons("output.txt", 0, 255, 0, 1366, 768);
+	print_polygons("output_origin.txt", 0, 255, 0, 1366, 768);
+	
+	pthread_t ttt;
+	pthread_create(&ttt, NULL, execute, NULL);
+
+	while(1){
+
+	}
+
 	/*pthread_t tid;
 	pthread_create(&tid, NULL, zoom, NULL);
 
@@ -263,51 +295,4 @@ int main(){
 		status = 'o';
 	}*/
 
-	// for(int scale=1; scale<=8; scale++){
-	// 	polygon plane = dilate(plane_origin, frame, scale, plane_origin.x_center,plane_origin.y_center);
-	// 	polygon rotor1 = dilate(rotor1_origin, frame, scale, plane_origin.x_center,plane_origin.y_center);
-	// 	polygon rotor2 = dilate(rotor2_origin, frame, scale, plane_origin.x_center,plane_origin.y_center);
-	// 	polygon rotated_rotor1 = dilate(rotated_rotor1_origin, frame, scale, plane_origin.x_center,plane_origin.y_center);
-	// 	polygon rotated_rotor2 = dilate(rotated_rotor2_origin, frame, scale, plane_origin.x_center,plane_origin.y_center);
-	// 	draw_polygon(plane, f);
-		
-	// 	time_t begin, end;
-	// 	double time_spent = 0;
-	// 	begin = time(NULL);
-
-	// 	int count = 0;
-	// 	while(time_spent<=1){
-	// 		set_color_polygon(&rotor1, 0, 0, 255);
-	// 		set_color_polygon(&rotor2, 0, 0, 255);
-	// 		set_color_polygon(&rotated_rotor1, 0, 0, 255);
-	// 		set_color_polygon(&rotated_rotor2, 0, 0, 255);
-	// 		if(count%2==0){
-	// 			draw_polygon(rotor1, f);
-	// 			draw_polygon(rotor2, f);
-	// 			usleep(100000);
-	// 			set_color_polygon(&rotor1, 0, 255, 0);
-	// 			set_color_polygon(&rotor2, 0, 255, 0);
-	// 			draw_polygon(rotor1, f);
-	// 			draw_polygon(rotor2, f);
-	// 		}
-	// 		else{
-	// 			draw_polygon(rotated_rotor1, f);
-	// 			draw_polygon(rotated_rotor2, f);
-	// 			usleep(100000);
-	// 			set_color_polygon(&rotated_rotor1, 0, 255, 0);
-	// 			set_color_polygon(&rotated_rotor2, 0, 255, 0);
-	// 			draw_polygon(rotated_rotor1, f);
-	// 			draw_polygon(rotated_rotor2, f);
-	// 		}
-	// 		count++;
-	// 		end = time(NULL);
-	// 		time_spent = (double) (end - begin);
-	// 	}
-
-	// 	if (scale != 8) {
-	// 		set_color_polygon(&plane, 255, 255, 255);
-	// 	}
-	// 	draw_polygon(plane, f);
-	// 	printf("\n");
-	// }
 }
