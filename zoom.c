@@ -15,16 +15,19 @@ polygon image2_origin;
 polygon *polygons;
 polygon *polygons_origin;
 int nPolygon;
+int kantin_idx;
 int current_scale;
 char status;
+int kantin_aktif;
 
 void init_polygons(char* filename, int c1, int c2, int c3, int x_resolution, int y_resolution) {
 	FILE *fp;
      
     fp = fopen(filename, "r");
     fscanf(fp, "%d", &nPolygon);
+    fscanf(fp, "%d", &kantin_idx);
+    printf("%d %d\n", nPolygon, kantin_idx);
 
-    free(polygons);
     polygons = (polygon *) malloc (nPolygon * sizeof(polygon));
     polygons_origin = (polygon *) malloc (nPolygon * sizeof(polygon));
 
@@ -71,6 +74,17 @@ void init_polygons(char* filename, int c1, int c2, int c3, int x_resolution, int
     }
 
     fclose(fp);
+    kantin_aktif = 1;
+    for (int i=kantin_idx; i<nPolygon; i++) {
+    	//printf("%d %d %d\n", polygons[i].c1, polygons[i].c2, polygons[i].c3);
+		polygons[i].c1 = 51;
+		polygons[i].c2 = 133;
+		polygons[i].c3 = 255;
+		polygons_origin[i].c1 = 51;
+		polygons_origin[i].c2 = 133;
+		polygons_origin[i].c3 = 255;
+	}
+	// printf("%d %d %d\n", polygons[kantin_idx].c1, polygons[kantin_idx].c2, polygons[kantin_idx].c3);
     printf("Load done\n");
 }
 
@@ -154,33 +168,50 @@ void drawView(int c1, int c2, int c3) {
 }
 
 void eraseImage() {
-	int c1, c2, c3;
+	int c1, c2, c3, c4, c5, c6;
 	for (int i=0; i<nPolygon; i++) {
 		c1 = polygons[i].c1;
 		c2 = polygons[i].c2;
 		c3 = polygons[i].c3;
+		c4 = polygons_origin[i].c1;
+		c5 = polygons_origin[i].c2;		
+		c6 = polygons_origin[i].c3;
 		polygons[i].c1 = 0;
 		polygons[i].c2 = 0;
 		polygons[i].c3 = 0;
-		// draw_polygon(polygons[i], f);
+		polygons_origin[i].c1 = 0;
+		polygons_origin[i].c2 = 0;
+		polygons_origin[i].c3 = 0;
+		draw_polygon(polygons_origin[i], f);
 		draw_polygon(viewport(polygons[i]), f);
 		polygons[i].c1 = c1;
 		polygons[i].c2 = c2;
 		polygons[i].c3 = c3;
+		polygons_origin[i].c1 = c4;
+		polygons_origin[i].c2 = c5;
+		polygons_origin[i].c3 = c6;
 	}
 
 	// Erase window
 	drawWindow(0,0,0);
-	for (int i=0; i<nPolygon; i++) {
-		draw_polygon(polygons_origin[i], f);
-	}
+	// for (int i=0; i<nPolygon; i++) {
+	// 	draw_polygon(polygons_origin[i], f);
+	// }
 }
 
 void updateImage() {
 	// Update images
-	for (int i=0; i<nPolygon; i++) {
+	for (int i=0; i<kantin_idx; i++) {
 		polygons[i] = translate(polygons_origin[i], window, 0, 0);
+		draw_polygon(polygons_origin[i], f);
 		draw_polygon(viewport(polygons[i]), f);
+	}
+	if (kantin_aktif) {
+		for (int i=kantin_idx; i<nPolygon; i++) {
+			polygons[i] = translate(polygons_origin[i], window, 0, 0);
+			draw_polygon(polygons_origin[i], f);
+			draw_polygon(viewport(polygons[i]), f);
+		}	
 	}
 
 	// Update window
@@ -219,6 +250,9 @@ void* transformWindow(void *arg) {
         else if (c == '4') {
         	status = '4';
         }
+        else if (c == 'l') {
+        	status = 'l';
+        }
         else{
         	break;
         }
@@ -256,10 +290,9 @@ int main(){
 	window_origin = create_polygon_from_file("frame_window_test.txt", 255, 255, 255, 1366, 768);
 	view = create_polygon_from_file("frame_view_test.txt", 255, 255, 255, 1366, 768);
 
-	init_polygons("output.txt", 0, 255, 0, 1366, 768);
+	init_polygons("output.txt", 255, 102, 0, 1366, 768);
 
 	window = translate(window_origin, world, 0, 0);
-
 	for (int i=0; i<nPolygon; i++) {
 		polygons[i] = translate(polygons_origin[i], window, 0, 0);
 		draw_polygon(polygons_origin[i], f);
@@ -337,6 +370,15 @@ int main(){
 			eraseImage();
 			window = dilate(translate(window_origin,world,dWindowX,dWindowY), world, 4, (window.arr[0][0]+window.arr[1][0])/2, (window.arr[0][1]+window.arr[2][1])/2);
 			currWindow = 4;
+			updateImage();
+		}
+		else if(status=='l') {
+			eraseImage();
+			if (kantin_aktif) {
+        		kantin_aktif = 0;
+        	} else {
+        		kantin_aktif = 1;
+        	}
 			updateImage();
 		}
 	}
