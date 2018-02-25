@@ -16,9 +16,11 @@ polygon *polygons;
 polygon *polygons_origin;
 int nPolygon;
 int kantin_idx;
+int jalan_idx;
 int current_scale;
 char status;
 int kantin_aktif;
+int jalan_aktif;
 
 void init_polygons(char* filename, int c1, int c2, int c3, int x_resolution, int y_resolution) {
 	FILE *fp;
@@ -26,17 +28,13 @@ void init_polygons(char* filename, int c1, int c2, int c3, int x_resolution, int
     fp = fopen(filename, "r");
     fscanf(fp, "%d", &nPolygon);
     fscanf(fp, "%d", &kantin_idx);
-    printf("%d %d\n", nPolygon, kantin_idx);
+    fscanf(fp, "%d", &jalan_idx);
 
     polygons = (polygon *) malloc (nPolygon * sizeof(polygon));
     polygons_origin = (polygon *) malloc (nPolygon * sizeof(polygon));
 
     int i = 0;
-    int j,k, minx, miny, maxx, maxy;
-    maxx = 0;
-    maxy = 0;
-    minx = x_resolution;
-    miny = y_resolution;
+    int j,k;
 
     int temp;
     while(i < nPolygon){
@@ -58,13 +56,9 @@ void init_polygons(char* filename, int c1, int c2, int c3, int x_resolution, int
     		fscanf(fp, "%d", &temp);
     		if(j%2==0){
 	            polygons[i].arr[k][0] = temp+100;
-	            if (temp+100 < minx) minx = temp+100;
-	            if (temp+100 > maxx) maxx = temp+100;
 	        }
 	        else{
 	            polygons[i].arr[k][1] = temp+100;
-	            if (temp+100 < miny) miny = temp+100;
-	            if (temp+100 > maxy) maxy = temp+100;
 	            k++;
 	        }
 	        j++;
@@ -75,8 +69,7 @@ void init_polygons(char* filename, int c1, int c2, int c3, int x_resolution, int
 
     fclose(fp);
     kantin_aktif = 1;
-    for (int i=kantin_idx; i<nPolygon; i++) {
-    	//printf("%d %d %d\n", polygons[i].c1, polygons[i].c2, polygons[i].c3);
+    for (int i=kantin_idx; i<jalan_idx; i++) {
 		polygons[i].c1 = 51;
 		polygons[i].c2 = 133;
 		polygons[i].c3 = 255;
@@ -84,8 +77,18 @@ void init_polygons(char* filename, int c1, int c2, int c3, int x_resolution, int
 		polygons_origin[i].c2 = 133;
 		polygons_origin[i].c3 = 255;
 	}
-	// printf("%d %d %d\n", polygons[kantin_idx].c1, polygons[kantin_idx].c2, polygons[kantin_idx].c3);
-    printf("Load done\n");
+
+	jalan_aktif = 1;
+	for (int i=jalan_idx; i<nPolygon; i++) {
+    	//printf("%d %d %d\n", polygons[i].c1, polygons[i].c2, polygons[i].c3);
+		polygons[i].c1 = 0;
+		polygons[i].c2 = 0;
+		polygons[i].c3 = 255;
+		polygons_origin[i].c1 = 0;
+		polygons_origin[i].c2 = 0;
+		polygons_origin[i].c3 = 255;
+	}
+	printf("%d %d %d\n", polygons[jalan_idx].c1, polygons[jalan_idx].c2, polygons[jalan_idx].c3);
 }
 
 polygon viewport(polygon p) {
@@ -207,7 +210,14 @@ void updateImage() {
 		draw_polygon(viewport(polygons[i]), f);
 	}
 	if (kantin_aktif) {
-		for (int i=kantin_idx; i<nPolygon; i++) {
+		for (int i=kantin_idx; i<jalan_idx; i++) {
+			polygons[i] = translate(polygons_origin[i], window, 0, 0);
+			draw_polygon(polygons_origin[i], f);
+			draw_polygon(viewport(polygons[i]), f);
+		}	
+	}
+	if (jalan_aktif) {
+		for (int i=jalan_idx; i<nPolygon; i++) {
 			polygons[i] = translate(polygons_origin[i], window, 0, 0);
 			draw_polygon(polygons_origin[i], f);
 			draw_polygon(viewport(polygons[i]), f);
@@ -252,6 +262,9 @@ void* transformWindow(void *arg) {
         }
         else if (c == 'l') {
         	status = 'l';
+        }
+        else if (c == 'k') {
+        	status = 'k';
         }
         else{
         	break;
@@ -298,6 +311,7 @@ int main(){
 		draw_polygon(polygons_origin[i], f);
 		draw_polygon(viewport(polygons[i]), f);
 	}
+	printf("%d %d %d\n", polygons[jalan_idx].c1, polygons[jalan_idx].c2, polygons[jalan_idx].c3);
 
 	drawWindow(255,255,255);
 	drawView(255,255,255);
@@ -378,6 +392,15 @@ int main(){
         		kantin_aktif = 0;
         	} else {
         		kantin_aktif = 1;
+        	}
+			updateImage();
+		}
+		else if(status=='k') {
+			eraseImage();
+			if (jalan_aktif) {
+        		jalan_aktif = 0;
+        	} else {
+        		jalan_aktif = 1;
         	}
 			updateImage();
 		}
