@@ -167,7 +167,7 @@ int main(){
 	f = init();
 	
 	current_scale = 1;
-	current = 0;
+	current = 1;
 
 	frame = create_polygon_from_file("frame.txt", 255, 255, 255, 1366, 768);
 	/*plane_origin = create_polygon_from_file("plane.txt", 0, 255, 0, 1366, 768);
@@ -186,8 +186,9 @@ int main(){
 
 	draw_polygon(frame, f);
 
+    print_polygons("kantin.txt", 0, 0, 255, 1366, 768);
 	print_polygons("output_origin.txt", 0, 255, 0, 1366, 768);
-	
+
 	pthread_t ttt;
 	pthread_create(&ttt, NULL, execute, NULL);
 

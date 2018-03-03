@@ -17,18 +17,41 @@ polygon *polygons_origin;
 int nPolygon;
 int kantin_idx;
 int jalan_idx;
+int parkiran_idx;
+int hijau_idx;
 int current_scale;
 char status;
 int kantin_aktif;
 int jalan_aktif;
+int parkiran_aktif;
+int hijau_aktif;
 
-void init_polygons(char* filename, int c1, int c2, int c3, int x_resolution, int y_resolution) {
+void ignore_read(FILE *fp) {
+	char buffer[64];
+    char *b = buffer;
+    size_t bufsize = 64;
+    size_t characters;
+
+    characters = getline(&b,&bufsize,fp);
+    while (buffer[0] != '/') {
+    	characters = getline(&b,&bufsize,fp);
+    }
+}
+
+void init_polygons(char* filename, int x_resolution, int y_resolution) {
 	FILE *fp;
      
     fp = fopen(filename, "r");
+    ignore_read(fp);
     fscanf(fp, "%d", &nPolygon);
+    ignore_read(fp);
     fscanf(fp, "%d", &kantin_idx);
+    ignore_read(fp);
     fscanf(fp, "%d", &jalan_idx);
+    ignore_read(fp);
+    fscanf(fp, "%d", &parkiran_idx);
+	ignore_read(fp);
+    fscanf(fp, "%d", &hijau_idx);
 
     polygons = (polygon *) malloc (nPolygon * sizeof(polygon));
     polygons_origin = (polygon *) malloc (nPolygon * sizeof(polygon));
@@ -38,11 +61,16 @@ void init_polygons(char* filename, int c1, int c2, int c3, int x_resolution, int
 
     int temp;
     while(i < nPolygon){
+
+    	if (i == 0 || i == kantin_idx || i == jalan_idx || i == parkiran_idx || i == hijau_idx) {
+    		ignore_read(fp);
+    	}
+
     	fscanf(fp, "%d", &temp);
     	polygons[i].size = temp;
-    	polygons[i].c1 = c1;
-		polygons[i].c2 = c2;
-		polygons[i].c3 = c3;
+    	polygons[i].c1 = 255;
+		polygons[i].c2 = 102;
+		polygons[i].c3 = 0;
 		polygons[i].x_resolution = x_resolution;
 		polygons[i].y_resolution = y_resolution;
 
@@ -79,16 +107,38 @@ void init_polygons(char* filename, int c1, int c2, int c3, int x_resolution, int
 	}
 
 	jalan_aktif = 1;
-	for (int i=jalan_idx; i<nPolygon; i++) {
+	for (int i=jalan_idx; i<parkiran_idx; i++) {
     	//printf("%d %d %d\n", polygons[i].c1, polygons[i].c2, polygons[i].c3);
-		polygons[i].c1 = 0;
-		polygons[i].c2 = 0;
-		polygons[i].c3 = 255;
-		polygons_origin[i].c1 = 0;
-		polygons_origin[i].c2 = 0;
-		polygons_origin[i].c3 = 255;
+		polygons[i].c1 = 124;
+		polygons[i].c2 = 124;
+		polygons[i].c3 = 124;
+		polygons_origin[i].c1 = 124;
+		polygons_origin[i].c2 = 124;
+		polygons_origin[i].c3 = 124;
 	}
-	printf("%d %d %d\n", polygons[jalan_idx].c1, polygons[jalan_idx].c2, polygons[jalan_idx].c3);
+
+	parkiran_aktif = 1;
+	for (int i=parkiran_idx; i<hijau_idx; i++) {
+    	//printf("%d %d %d\n", polygons[i].c1, polygons[i].c2, polygons[i].c3);
+		polygons[i].c1 = 200;
+		polygons[i].c2 = 200;
+		polygons[i].c3 = 200;
+		polygons_origin[i].c1 = 200;
+		polygons_origin[i].c2 = 200;
+		polygons_origin[i].c3 = 200;
+	}
+
+	hijau_aktif = 1;
+	for (int i=hijau_idx; i<nPolygon; i++) {
+    	//printf("%d %d %d\n", polygons[i].c1, polygons[i].c2, polygons[i].c3);
+		polygons[i].c1 = 78;
+		polygons[i].c2 = 189;
+		polygons[i].c3 = 78;
+		polygons_origin[i].c1 = 78;
+		polygons_origin[i].c2 = 189;
+		polygons_origin[i].c3 = 78;
+	}
+
 }
 
 polygon viewport(polygon p) {
@@ -204,6 +254,13 @@ void eraseImage() {
 
 void updateImage() {
 	// Update images
+	if (hijau_aktif) {
+		for (int i=hijau_idx; i<nPolygon; i++) {
+			polygons[i] = translate(polygons_origin[i], window, 0, 0);
+			draw_polygon(polygons_origin[i], f);
+			draw_polygon(viewport(polygons[i]), f);
+		}	
+	}
 	for (int i=0; i<kantin_idx; i++) {
 		polygons[i] = translate(polygons_origin[i], window, 0, 0);
 		draw_polygon(polygons_origin[i], f);
@@ -217,7 +274,14 @@ void updateImage() {
 		}	
 	}
 	if (jalan_aktif) {
-		for (int i=jalan_idx; i<nPolygon; i++) {
+		for (int i=jalan_idx; i<parkiran_idx; i++) {
+			polygons[i] = translate(polygons_origin[i], window, 0, 0);
+			draw_polygon(polygons_origin[i], f);
+			draw_polygon(viewport(polygons[i]), f);
+		}	
+	}
+	if (parkiran_aktif) {
+		for (int i=parkiran_idx; i<hijau_idx; i++) {
 			polygons[i] = translate(polygons_origin[i], window, 0, 0);
 			draw_polygon(polygons_origin[i], f);
 			draw_polygon(viewport(polygons[i]), f);
@@ -260,11 +324,17 @@ void* transformWindow(void *arg) {
         else if (c == '4') {
         	status = '4';
         }
-        else if (c == 'l') {
+        else if (c == 'l') { // kantin
         	status = 'l';
         }
-        else if (c == 'k') {
+        else if (c == 'k') { // jalan
         	status = 'k';
+        }
+        else if (c == 'j') { // parkiran
+        	status = 'j';
+        }
+        else if (c == 'h') { // hijau
+        	status = 'h';
         }
         else{
         	break;
@@ -282,7 +352,7 @@ int isAValid() {
 }
 
 int isSValid() {
-	return window.arr[0][1] < 480 && window.arr[1][1] < 480 && window.arr[2][1] < 480 && window.arr[3][1] < 480;
+	return window.arr[0][1] < 520 && window.arr[1][1] < 520 && window.arr[2][1] < 520 && window.arr[3][1] < 520;
 }
 
 int isDValid() {
@@ -292,7 +362,7 @@ int isDValid() {
 int isDilateValid(int d) {
 	return window.arr[0][1] >= 100+d*20 && window.arr[1][1] >= 100+d*20 && window.arr[2][1] >= 100+d*20 && window.arr[3][1] >= 100+d*20 &&
 		window.arr[0][0] >= 120+d*20 && window.arr[1][0] >= 120+d*20 && window.arr[2][0] >= 120+d*20 && window.arr[3][0] >= 120+d*20 &&
-		window.arr[0][1] <= 480-d*20 && window.arr[1][1] <= 480-d*20 && window.arr[2][1] <= 480-d*20 && window.arr[3][1] <= 480-d*20 &&
+		window.arr[0][1] <= 520-d*20 && window.arr[1][1] <= 520-d*20 && window.arr[2][1] <= 520-d*20 && window.arr[3][1] <= 520-d*20 &&
 		window.arr[0][0] <= 460-d*20 && window.arr[1][0] <= 460-d*20 && window.arr[2][0] <= 460-d*20 && window.arr[3][0] <= 460-d*20;
 }
 
@@ -303,12 +373,13 @@ int main(){
 	window_origin = create_polygon_from_file("frame_window_test.txt", 255, 255, 255, 1366, 768);
 	view = create_polygon_from_file("frame_view_test.txt", 255, 255, 255, 1366, 768);
 
-	init_polygons("output.txt", 255, 102, 0, 1366, 768);
+	init_polygons("output.txt", 1366, 768);
 
 	window = translate(window_origin, world, 0, 0);
+	updateImage();
 	for (int i=0; i<nPolygon; i++) {
 		polygons[i] = translate(polygons_origin[i], window, 0, 0);
-		draw_polygon(polygons_origin[i], f);
+		//draw_polygon(polygons_origin[i], f);
 		draw_polygon(viewport(polygons[i]), f);
 	}
 	printf("%d %d %d\n", polygons[jalan_idx].c1, polygons[jalan_idx].c2, polygons[jalan_idx].c3);
@@ -401,6 +472,24 @@ int main(){
         		jalan_aktif = 0;
         	} else {
         		jalan_aktif = 1;
+        	}
+			updateImage();
+		}
+		else if(status=='j') {
+			eraseImage();
+			if (parkiran_aktif) {
+        		parkiran_aktif = 0;
+        	} else {
+        		parkiran_aktif = 1;
+        	}
+			updateImage();
+		}
+		else if(status=='h') {
+			eraseImage();
+			if (hijau_aktif) {
+        		hijau_aktif = 0;
+        	} else {
+        		hijau_aktif = 1;
         	}
 			updateImage();
 		}
