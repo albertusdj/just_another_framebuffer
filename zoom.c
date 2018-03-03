@@ -19,12 +19,15 @@ int kantin_idx;
 int jalan_idx;
 int parkiran_idx;
 int hijau_idx;
+int ass_idx;
 int current_scale;
 char status;
 int kantin_aktif;
 int jalan_aktif;
 int parkiran_aktif;
 int hijau_aktif;
+int ass_aktif;
+int building_aktif;
 
 void ignore_read(FILE *fp) {
 	char buffer[64];
@@ -52,6 +55,8 @@ void init_polygons(char* filename, int x_resolution, int y_resolution) {
     fscanf(fp, "%d", &parkiran_idx);
 	ignore_read(fp);
     fscanf(fp, "%d", &hijau_idx);
+    ignore_read(fp);
+    fscanf(fp, "%d", &ass_idx);
 
     polygons = (polygon *) malloc (nPolygon * sizeof(polygon));
     polygons_origin = (polygon *) malloc (nPolygon * sizeof(polygon));
@@ -62,7 +67,7 @@ void init_polygons(char* filename, int x_resolution, int y_resolution) {
     int temp;
     while(i < nPolygon){
 
-    	if (i == 0 || i == kantin_idx || i == jalan_idx || i == parkiran_idx || i == hijau_idx) {
+    	if (i == 0 || i == kantin_idx || i == jalan_idx || i == parkiran_idx || i == hijau_idx || i == ass_idx) {
     		ignore_read(fp);
     	}
 
@@ -96,6 +101,9 @@ void init_polygons(char* filename, int x_resolution, int y_resolution) {
     }
 
     fclose(fp);
+
+    building_aktif = 1;
+
     kantin_aktif = 1;
     for (int i=kantin_idx; i<jalan_idx; i++) {
 		polygons[i].c1 = 51;
@@ -109,27 +117,27 @@ void init_polygons(char* filename, int x_resolution, int y_resolution) {
 	jalan_aktif = 1;
 	for (int i=jalan_idx; i<parkiran_idx; i++) {
     	//printf("%d %d %d\n", polygons[i].c1, polygons[i].c2, polygons[i].c3);
-		polygons[i].c1 = 124;
-		polygons[i].c2 = 124;
-		polygons[i].c3 = 124;
-		polygons_origin[i].c1 = 124;
-		polygons_origin[i].c2 = 124;
-		polygons_origin[i].c3 = 124;
+		polygons[i].c1 = 99;
+		polygons[i].c2 = 99;
+		polygons[i].c3 = 99;
+		polygons_origin[i].c1 = 99;
+		polygons_origin[i].c2 = 99;
+		polygons_origin[i].c3 = 99;
 	}
 
 	parkiran_aktif = 1;
 	for (int i=parkiran_idx; i<hijau_idx; i++) {
     	//printf("%d %d %d\n", polygons[i].c1, polygons[i].c2, polygons[i].c3);
-		polygons[i].c1 = 200;
-		polygons[i].c2 = 200;
-		polygons[i].c3 = 200;
-		polygons_origin[i].c1 = 200;
-		polygons_origin[i].c2 = 200;
-		polygons_origin[i].c3 = 200;
+		polygons[i].c1 = 255;
+		polygons[i].c2 = 99;
+		polygons[i].c3 = 222;
+		polygons_origin[i].c1 = 255;
+		polygons_origin[i].c2 = 99;
+		polygons_origin[i].c3 = 222;
 	}
 
 	hijau_aktif = 1;
-	for (int i=hijau_idx; i<nPolygon; i++) {
+	for (int i=hijau_idx; i<ass_idx; i++) {
     	//printf("%d %d %d\n", polygons[i].c1, polygons[i].c2, polygons[i].c3);
 		polygons[i].c1 = 78;
 		polygons[i].c2 = 189;
@@ -137,6 +145,17 @@ void init_polygons(char* filename, int x_resolution, int y_resolution) {
 		polygons_origin[i].c1 = 78;
 		polygons_origin[i].c2 = 189;
 		polygons_origin[i].c3 = 78;
+	}
+
+	ass_aktif = 1;
+	for (int i=ass_idx; i<nPolygon; i++) {
+    	//printf("%d %d %d\n", polygons[i].c1, polygons[i].c2, polygons[i].c3);
+		polygons[i].c1 = 251;
+		polygons[i].c2 = 255;
+		polygons[i].c3 = 102;
+		polygons_origin[i].c1 = 251;
+		polygons_origin[i].c2 = 255;
+		polygons_origin[i].c3 = 102;
 	}
 
 }
@@ -255,16 +274,18 @@ void eraseImage() {
 void updateImage() {
 	// Update images
 	if (hijau_aktif) {
-		for (int i=hijau_idx; i<nPolygon; i++) {
+		for (int i=hijau_idx; i<ass_idx; i++) {
 			polygons[i] = translate(polygons_origin[i], window, 0, 0);
 			draw_polygon(polygons_origin[i], f);
 			draw_polygon(viewport(polygons[i]), f);
 		}	
 	}
-	for (int i=0; i<kantin_idx; i++) {
-		polygons[i] = translate(polygons_origin[i], window, 0, 0);
-		draw_polygon(polygons_origin[i], f);
-		draw_polygon(viewport(polygons[i]), f);
+	if (building_aktif) {
+		for (int i=0; i<kantin_idx; i++) {
+			polygons[i] = translate(polygons_origin[i], window, 0, 0);
+			draw_polygon(polygons_origin[i], f);
+			draw_polygon(viewport(polygons[i]), f);
+		}
 	}
 	if (kantin_aktif) {
 		for (int i=kantin_idx; i<jalan_idx; i++) {
@@ -282,6 +303,13 @@ void updateImage() {
 	}
 	if (parkiran_aktif) {
 		for (int i=parkiran_idx; i<hijau_idx; i++) {
+			polygons[i] = translate(polygons_origin[i], window, 0, 0);
+			draw_polygon(polygons_origin[i], f);
+			draw_polygon(viewport(polygons[i]), f);
+		}	
+	}
+	if (ass_aktif) {
+		for (int i=ass_idx; i<nPolygon; i++) {
 			polygons[i] = translate(polygons_origin[i], window, 0, 0);
 			draw_polygon(polygons_origin[i], f);
 			draw_polygon(viewport(polygons[i]), f);
@@ -335,6 +363,12 @@ void* transformWindow(void *arg) {
         }
         else if (c == 'h') { // hijau
         	status = 'h';
+        }
+        else if (c == 'g') { // ass
+        	status = 'g';
+        }
+        else if (c == 'f') { // building
+        	status = 'f';
         }
         else{
         	break;
@@ -490,6 +524,24 @@ int main(){
         		hijau_aktif = 0;
         	} else {
         		hijau_aktif = 1;
+        	}
+			updateImage();
+		}
+		else if(status=='g') {
+			eraseImage();
+			if (ass_aktif) {
+        		ass_aktif = 0;
+        	} else {
+        		ass_aktif = 1;
+        	}
+			updateImage();
+		}
+		else if(status=='f') {
+			eraseImage();
+			if (building_aktif) {
+        		building_aktif = 0;
+        	} else {
+        		building_aktif = 1;
         	}
 			updateImage();
 		}
