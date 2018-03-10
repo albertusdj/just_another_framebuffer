@@ -75,7 +75,7 @@ int main(){
 	
 	current_scale = 1;
 
-	frame = create_polygon_from_file("frame.txt", 255, 255, 255, 1366, 768);
+	frame = create_polygon_from_file("frame_plane.txt", 255, 255, 255, 1366, 768);
 	plane_origin = create_polygon_from_file("plane.txt", 0, 255, 0, 1366, 768);
 	rotor1_origin = create_polygon_from_file("rotor.txt", 0, 0, 255, 1366, 768);
 	rotated_rotor1_origin = rotate(rotor1_origin, 592, 351);
@@ -91,6 +91,7 @@ int main(){
 	rotated_rotor2 = translate(rotated_rotor2_origin, frame, 0, 0);
 
 	draw_polygon(frame, f);
+	drawToScreen(&f);
 
 	pthread_t tid;
 	pthread_create(&tid, NULL, zoom, NULL);
@@ -109,6 +110,8 @@ int main(){
 		draw_polygon(plane, f);
 		draw_polygon(pilot, f);
 
+		drawToScreen(&f);
+
 		time_t begin, end;
 		double time_spent = 0;
 		begin = time(NULL);
@@ -122,20 +125,24 @@ int main(){
 			if(count%2==0){
 				draw_polygon(rotor1, f);
 				draw_polygon(rotor2, f);
+				drawToScreen(&f);
 				usleep(10000);
 				set_color_polygon(&rotor1, 0, 255, 0);
 				set_color_polygon(&rotor2, 0, 255, 0);
 				draw_polygon(rotor1, f);
 				draw_polygon(rotor2, f);
+				drawToScreen(&f);
 			}
 			else{
 				draw_polygon(rotated_rotor1, f);
 				draw_polygon(rotated_rotor2, f);
+				drawToScreen(&f);
 				usleep(10000);
 				set_color_polygon(&rotated_rotor1, 0, 255, 0);
 				set_color_polygon(&rotated_rotor2, 0, 255, 0);
 				draw_polygon(rotated_rotor1, f);
 				draw_polygon(rotated_rotor2, f);
+				drawToScreen(&f);
 			}
 			count++;
 			end = time(NULL);
@@ -143,6 +150,7 @@ int main(){
 		}
 
 		draw_polygon(frame, f);
+		drawToScreen(&f);
 
 		if(direction=='r' && move_count<limit){
 			move_count++;

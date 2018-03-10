@@ -331,7 +331,19 @@ void* transformWindow(void *arg) {
 	system ("/bin/stty raw");
     char c;
     while (c = getchar()) {
-        if (c == '1') {
+        if (c == 'w') {
+        	status = 'w';
+        }
+        else if (c == 's') {
+        	status = 's';
+        }
+        else if (c == 'd') {
+        	status = 'd';
+        }
+        else if (c == 'a') {
+        	status = 'a';
+        }
+        else if (c == '1') {
         	status = '1';
         }
         else if (c == '2') {
@@ -361,16 +373,16 @@ void* transformWindow(void *arg) {
         else if (c == 'f') { // building
         	status = 'f';
         }
-        else if(c == '='){
-        	if(sensitivity<10){
-        		sensitivity++;
-        	}
-        }
-        else if(c == '-'){
-        	if(sensitivity>1){
-        		sensitivity--;
-        	}
-        }
+        // else if(c == '='){
+        // 	if(sensitivity<10){
+        // 		sensitivity++;
+        // 	}
+        // }
+        // else if(c == '-'){
+        // 	if(sensitivity>1){
+        // 		sensitivity--;
+        // 	}
+        // }
         else{
         	break;
         }
@@ -572,7 +584,7 @@ int main() {
 	int dWindowY = 0;
 	currWindow = 1;
 
-	sensitivity = 1;
+	sensitivity = 10;
 
 	while(1) {
 		if(status=='w' && isWValid()==1){
@@ -581,7 +593,7 @@ int main() {
 			window.arr[1][1] -= sensitivity;
 			window.arr[2][1] -= sensitivity;
 			window.arr[3][1] -= sensitivity;
-			dWindowY -= 10;
+			dWindowY -= sensitivity;
 			updateImage();
 		}
 		else if(status=='a' && isAValid()==1){
@@ -590,7 +602,7 @@ int main() {
 			window.arr[1][0] -= sensitivity;
 			window.arr[2][0] -= sensitivity;
 			window.arr[3][0] -= sensitivity;
-			dWindowX -= 10;
+			dWindowX -= sensitivity;
 			updateImage();
 		}
 		else if(status=='s' && isSValid()==1){
@@ -599,7 +611,7 @@ int main() {
 			window.arr[1][1] += sensitivity;
 			window.arr[2][1] += sensitivity;
 			window.arr[3][1] += sensitivity;
-			dWindowY += 10;
+			dWindowY += sensitivity;
 			updateImage();
 		}
 		else if(status=='d' && isDValid()==1){
@@ -608,7 +620,7 @@ int main() {
 			window.arr[1][0] += sensitivity;
 			window.arr[2][0] += sensitivity;
 			window.arr[3][0] += sensitivity;
-			dWindowX += 10;
+			dWindowX += sensitivity;
 			updateImage();
 		}
 		else if(status=='1' && (currWindow>1 || isDilateValid(1-currWindow)==1)){
@@ -689,5 +701,7 @@ int main() {
         	}
 			updateImage();
 		}
+
+		drawToScreen(&f);
 	}
 }
