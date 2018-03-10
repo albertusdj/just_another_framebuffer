@@ -2,6 +2,8 @@
 #include "point.h"
 #include "line.h"
 #include "polygon.h"
+#include <gpm.h>
+#include <pthread.h>
 
 framebuffer f;
 polygon world;
@@ -28,6 +30,8 @@ int parkiran_aktif;
 int hijau_aktif;
 int ass_aktif;
 int building_aktif;
+int currWindow;
+int sensitivity;
 
 void ignore_read(FILE *fp) {
 	char buffer[64];
@@ -328,19 +332,7 @@ void* transformWindow(void *arg) {
 	system ("/bin/stty raw");
     char c;
     while (c = getchar()) {
-        if (c == 'w') {
-        	status = 'w';
-        }
-        else if (c == 'a') {
-        	status = 'a';
-        }
-        else if (c == 's') {
-        	status = 's';
-        }
-        else if (c == 'd') {
-        	status = 'd';
-        }
-        else if (c == '1') {
+        if (c == '1') {
         	status = '1';
         }
         else if (c == '2') {
@@ -370,11 +362,159 @@ void* transformWindow(void *arg) {
         else if (c == 'f') { // building
         	status = 'f';
         }
+        else if(c == '='){
+        	if(sensitivity<10){
+        		sensitivity++;
+        	}
+        }
+        else if(c == '-'){
+        	if(sensitivity>1){
+        		sensitivity--;
+        	}
+        }
         else{
         	break;
         }
-    }
+     }
+
     system ("/bin/stty cooked");
+}
+
+// int my_handler(Gpm_Event *event, void *data)
+// {       
+//          if(event->buttons & GPM_B_LEFT){
+//     		status = '2';
+//     		printf("left\n");
+//          }
+//         else if(event->buttons & GPM_B_RIGHT){
+//         	status = '3';
+//         	printf("right\n");
+//         }
+//         return 0;         
+// }
+
+// void* listenMouseEvent(void* arg){
+// 	printf("Mouse\n");
+// 	Gpm_Connect conn;
+//     int c;
+//     conn.eventMask  = ~0;   /* Want to know about all the events */
+//     conn.defaultMask = 0;   /* don't handle anything by default  */
+//     conn.minMod     = 0;    /* want everything                   */  
+//     conn.maxMod     = ~0;    all modifiers included            
+        
+//     if(Gpm_Open(&conn, 0) == -1)
+//         printf("Cannot connect to mouse server\n");
+        
+//     gpm_handler = my_handler;
+//     printf("handler\n");
+//     while((c = Gpm_Getc(stdin)) != EOF){
+//         printf("%c", c);
+//         printf("lalala\n");
+//     }
+
+//     Gpm_Close();
+//     printf("end\n");
+// }
+
+// void draw_mouse(int x, int y, int c1, int c2, int c3){
+// 	polygon mouse;
+// 	allocate_memory(&mouse, 4);
+// 	mouse.arr[0][0] = x;
+// 	mouse.arr[0][1] = y;
+// 	mouse.arr[1][0] = x + 2;
+// 	mouse.arr[1][1] = y;
+// 	mouse.arr[2][0] = x + 2;
+// 	mouse.arr[2][1] = y + 2;
+// 	mouse.arr[3][0] = x;
+// 	mouse.arr[3][1] = y + 2;
+// 	mouse.c1 = c1;
+// 	mouse.c2 = c2;
+// 	mouse.c3 = c3;
+// 	mouse.x_resolution = xR;
+// 	mouse.y_resolution = yR;
+
+// 	draw_polygon(mouse, f);
+// }
+
+int absolute(int x){
+	if(x>=0){
+		return x;
+	}
+	else{
+		return -1*x;
+	}
+}
+
+void* mouse_handler(void* arg){
+	int fd, bytes;
+    unsigned char data[3];
+
+    const char *pDevice = "/dev/input/mice";
+
+    // Open Mouse
+    fd = open(pDevice, O_RDWR);
+    if(fd == -1)
+    {
+        printf("ERROR Opening %s\n", pDevice);
+        
+    }
+
+    int left, middle, right;
+    signed char x, y;
+    while(1)
+    {
+        // Read Mouse     
+        bytes = read(fd, data, sizeof(data));
+
+        if(bytes > 0)
+        {
+            left = data[0] & 0x1;
+            right = data[0] & 0x2;
+            middle = data[0] & 0x4;
+
+            x = data[1];
+            y = data[2];
+            
+
+            // draw_mouse(currentX, currentY, 0, 0, 0);
+
+            // int tempX = currentX + x;
+            // int tempY = currentY - y;
+
+            // if(tempX <= xR && tempY >=0 && tempY <= yR && tempY >= 0){
+            // 	currentX = tempX;
+            // 	currentY = tempY;
+            // }
+
+            // draw_mouse(currentX, currentY, 255, 255, 255);
+
+           	char dominant;
+
+           	if(absolute(x) >= absolute(y)){
+           		dominant = 'x';
+           	}
+           	else{
+           		dominant = 'y';
+           	}
+
+           	if(dominant == 'x'){
+           		if(x > 0){
+           			status = 'd';
+           		}
+           		else{
+           			status = 'a';
+           		}
+           	}
+           	else{
+           		if(y > 0){
+           			status = 'w';
+           		}
+           		else{
+           			status = 's';
+           		}
+           	}
+        }   
+    }
 }
 
 int isWValid() {
@@ -400,7 +540,8 @@ int isDilateValid(int d) {
 		window.arr[0][0] <= 460-d*20 && window.arr[1][0] <= 460-d*20 && window.arr[2][0] <= 460-d*20 && window.arr[3][0] <= 460-d*20;
 }
 
-int main(){
+int main() {
+
 	f = init();
 	
 	world = create_polygon_from_file("frame_world_test.txt", 255, 255, 255, 1366, 768);
@@ -423,47 +564,51 @@ int main(){
 
 	pthread_t tid;
 	pthread_create(&tid, NULL, transformWindow, NULL);
+	pthread_t mouse_thread_id;
+	pthread_create(&mouse_thread_id, NULL, mouse_handler, NULL);
 
 	status = 'o';
 
 	int dWindowX = 0;
 	int dWindowY = 0;
-	int currWindow = 1;
+	currWindow = 1;
+
+	sensitivity = 1;
 
 	while(1) {
 		if(status=='w' && isWValid()==1){
 			eraseImage();
-			window.arr[0][1] -= 10;
-			window.arr[1][1] -= 10;
-			window.arr[2][1] -= 10;
-			window.arr[3][1] -= 10;
+			window.arr[0][1] -= sensitivity;
+			window.arr[1][1] -= sensitivity;
+			window.arr[2][1] -= sensitivity;
+			window.arr[3][1] -= sensitivity;
 			dWindowY -= 10;
 			updateImage();
 		}
 		else if(status=='a' && isAValid()==1){
 			eraseImage();
-			window.arr[0][0] -= 10;
-			window.arr[1][0] -= 10;
-			window.arr[2][0] -= 10;
-			window.arr[3][0] -= 10;
+			window.arr[0][0] -= sensitivity;
+			window.arr[1][0] -= sensitivity;
+			window.arr[2][0] -= sensitivity;
+			window.arr[3][0] -= sensitivity;
 			dWindowX -= 10;
 			updateImage();
 		}
 		else if(status=='s' && isSValid()==1){
 			eraseImage();
-			window.arr[0][1] += 10;
-			window.arr[1][1] += 10;
-			window.arr[2][1] += 10;
-			window.arr[3][1] += 10;
+			window.arr[0][1] += sensitivity;
+			window.arr[1][1] += sensitivity;
+			window.arr[2][1] += sensitivity;
+			window.arr[3][1] += sensitivity;
 			dWindowY += 10;
 			updateImage();
 		}
 		else if(status=='d' && isDValid()==1){
 			eraseImage();
-			window.arr[0][0] += 10;
-			window.arr[1][0] += 10;
-			window.arr[2][0] += 10;
-			window.arr[3][0] += 10;
+			window.arr[0][0] += sensitivity;
+			window.arr[1][0] += sensitivity;
+			window.arr[2][0] += sensitivity;
+			window.arr[3][0] += sensitivity;
 			dWindowX += 10;
 			updateImage();
 		}
