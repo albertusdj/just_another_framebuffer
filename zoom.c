@@ -2,7 +2,6 @@
 #include "point.h"
 #include "line.h"
 #include "polygon.h"
-#include <gpm.h>
 #include <pthread.h>
 
 framebuffer f;
