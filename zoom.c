@@ -2,6 +2,7 @@
 #include "point.h"
 #include "line.h"
 #include "polygon.h"
+#include "crosshair.h"
 #include <pthread.h>
 
 framebuffer f;
@@ -31,6 +32,7 @@ int ass_aktif;
 int building_aktif;
 int currWindow;
 int sensitivity;
+int is_mouse_shown;
 
 void ignore_read(FILE *fp) {
 	char buffer[64];
@@ -86,19 +88,15 @@ void init_polygons(char* filename, int x_resolution, int y_resolution) {
     	allocate_memory(&polygons_origin[i], polygons[i].size);
 
 		j = 0;
-    	k = 0;
 
-    	while (j < polygons[i].size * 2) {
+    	while (j < polygons[i].size) {
     		fscanf(fp, "%d", &temp);
-    		if(j%2==0){
-	            polygons[i].arr[k][0] = temp+100;
-	        }
-	        else{
-	            polygons[i].arr[k][1] = temp+100;
-	            k++;
-	        }
+            polygons[i].arr[j][0] = temp+100;
+            fscanf(fp, "%d", &temp);
+            polygons[i].arr[j][1] = temp+100;
 	        j++;
     	}
+    	
     	polygons_origin[i] = translate(polygons[i], world, 0, 0);
     	i++;
     }
@@ -373,16 +371,9 @@ void* transformWindow(void *arg) {
         else if (c == 'f') { // building
         	status = 'f';
         }
-        // else if(c == '='){
-        // 	if(sensitivity<10){
-        // 		sensitivity++;
-        // 	}
-        // }
-        // else if(c == '-'){
-        // 	if(sensitivity>1){
-        // 		sensitivity--;
-        // 	}
-        // }
+        else if (c == 1){
+        	is_mouse_shown ^= 1;
+        }
         else{
         	break;
         }
@@ -390,62 +381,6 @@ void* transformWindow(void *arg) {
 
     system ("/bin/stty cooked");
 }
-
-// int my_handler(Gpm_Event *event, void *data)
-// {       
-//          if(event->buttons & GPM_B_LEFT){
-//     		status = '2';
-//     		printf("left\n");
-//          }
-//         else if(event->buttons & GPM_B_RIGHT){
-//         	status = '3';
-//         	printf("right\n");
-//         }
-//         return 0;         
-// }
-
-// void* listenMouseEvent(void* arg){
-// 	printf("Mouse\n");
-// 	Gpm_Connect conn;
-//     int c;
-//     conn.eventMask  = ~0;   /* Want to know about all the events */
-//     conn.defaultMask = 0;   /* don't handle anything by default  */
-//     conn.minMod     = 0;    /* want everything                   */  
-//     conn.maxMod     = ~0;    all modifiers included            
-        
-//     if(Gpm_Open(&conn, 0) == -1)
-//         printf("Cannot connect to mouse server\n");
-        
-//     gpm_handler = my_handler;
-//     printf("handler\n");
-//     while((c = Gpm_Getc(stdin)) != EOF){
-//         printf("%c", c);
-//         printf("lalala\n");
-//     }
-
-//     Gpm_Close();
-//     printf("end\n");
-// }
-
-// void draw_mouse(int x, int y, int c1, int c2, int c3){
-// 	polygon mouse;
-// 	allocate_memory(&mouse, 4);
-// 	mouse.arr[0][0] = x;
-// 	mouse.arr[0][1] = y;
-// 	mouse.arr[1][0] = x + 2;
-// 	mouse.arr[1][1] = y;
-// 	mouse.arr[2][0] = x + 2;
-// 	mouse.arr[2][1] = y + 2;
-// 	mouse.arr[3][0] = x;
-// 	mouse.arr[3][1] = y + 2;
-// 	mouse.c1 = c1;
-// 	mouse.c2 = c2;
-// 	mouse.c3 = c3;
-// 	mouse.x_resolution = xR;
-// 	mouse.y_resolution = yR;
-
-// 	draw_polygon(mouse, f);
-// }
 
 int absolute(int x){
 	if(x>=0){
@@ -470,61 +405,78 @@ void* mouse_handler(void* arg){
         
     }
 
+    point crosshair_temp[((crosshair_radius-crosshair_middle)+1)*4];
+
+    // Create crosshair
+    point crosshair = create_point(dimension_x/2, (dimension_y)/2, crosshair_blue, crosshair_green, crosshair_red);
+    readTempCrosshair(crosshair_temp, crosshair, f);
+    drawCrosshair(crosshair, crosshair_radius, f);
+
     int left, middle, right;
-    signed char x, y;
+    signed char dx, dy;
     while(1)
-    {
-        // Read Mouse     
-        bytes = read(fd, data, sizeof(data));
+    {	
+    		bytes = read(fd, data, sizeof(data));
+	    	
+	    	if(!is_mouse_shown){
+		        if(bytes > 0)
+		        {
+		            left = data[0] & 0x1;
+		            right = data[0] & 0x2;
+		            middle = data[0] & 0x4;
 
-        if(bytes > 0)
-        {
-            left = data[0] & 0x1;
-            right = data[0] & 0x2;
-            middle = data[0] & 0x4;
+		            dx = data[1];
+		            dy = data[2];
 
-            x = data[1];
-            y = data[2];
+		           	char dominant;
+
+		           	if(absolute(dx) >= absolute(dy)){
+		           		dominant = 'x';
+		           	}
+		           	else{
+		           		dominant = 'y';
+		           	}
+
+		           	if(dominant == 'x'){
+		           		if(dx > 0){
+		           			status = 'd';
+		           		}
+		           		else{
+		           			status = 'a';
+		           		}
+		           	}
+		           	else{
+		           		if(dy > 0){
+		           			status = 'w';
+		           		}
+		           		else{
+		           			status = 's';
+		           		}
+		           	}
+		        }
+		    }
+		    else{
+		    	if (bytes > 0) {
+		            left = data[0] & 0x1;
+		            right = data[0] & 0x2;
+		            middle = data[0] & 0x4;
+
+		            dx = data[1];
+		            dy = data[2];
+
+		            if (isCrosshairMoveValid(crosshair, dx, dy)) {
+		                drawTempCrosshair(crosshair_temp, f);
+
+		                crosshair.x += dx;
+		                crosshair.y -= dy;
+
+		                readTempCrosshair(crosshair_temp, crosshair, f);
+		                drawCrosshair(crosshair, crosshair_radius, f);
+		            }
+
             
-
-            // draw_mouse(currentX, currentY, 0, 0, 0);
-
-            // int tempX = currentX + x;
-            // int tempY = currentY - y;
-
-            // if(tempX <= xR && tempY >=0 && tempY <= yR && tempY >= 0){
-            // 	currentX = tempX;
-            // 	currentY = tempY;
-            // }
-
-            // draw_mouse(currentX, currentY, 255, 255, 255);
-
-           	char dominant;
-
-           	if(absolute(x) >= absolute(y)){
-           		dominant = 'x';
-           	}
-           	else{
-           		dominant = 'y';
-           	}
-
-           	if(dominant == 'x'){
-           		if(x > 0){
-           			status = 'd';
-           		}
-           		else{
-           			status = 'a';
-           		}
-           	}
-           	else{
-           		if(y > 0){
-           			status = 'w';
-           		}
-           		else{
-           			status = 's';
-           		}
-           	}
-        }   
+        		}
+		    }   
     }
 }
 
@@ -551,6 +503,16 @@ int isDilateValid(int d) {
 		window.arr[0][0] <= 460-d*20 && window.arr[1][0] <= 460-d*20 && window.arr[2][0] <= 460-d*20 && window.arr[3][0] <= 460-d*20;
 }
 
+void geser(polygon *p, int x, int y){
+	(*p).x_center += x;
+	(*p).y_center += y;
+
+	for(int i=0; i < (*p).size; i++){
+		(*p).arr[i][0] += x;
+		(*p).arr[i][1] += y;
+	}
+}
+
 int main() {
 
 	f = init();
@@ -573,6 +535,8 @@ int main() {
 	drawWindow(255,255,255);
 	drawView(255,255,255);
 
+	is_mouse_shown = 0;
+
 	pthread_t tid;
 	pthread_create(&tid, NULL, transformWindow, NULL);
 	pthread_t mouse_thread_id;
@@ -585,6 +549,26 @@ int main() {
 	currWindow = 1;
 
 	sensitivity = 10;
+
+	polygon char_k = create_polygon_from_file("huruf/k.txt", 255, 255, 255, 1366, 768);
+	polygon kotak_k;
+	allocate_memory(&kotak_k, 4);
+	kotak_k.arr[0][0] = 150;
+	kotak_k.arr[0][1] = 600;
+	kotak_k.arr[1][0] = 186;
+	kotak_k.arr[1][1] = 600;
+	kotak_k.arr[2][0] = 186;
+	kotak_k.arr[2][1] = 654;
+	kotak_k.arr[3][0] = 150;
+	kotak_k.arr[3][1] = 654;
+	kotak_k.arr[4][0] = 150;
+	kotak_k.arr[4][1] = 600;
+	kotak_k.c1 = 255;
+	kotak_k.c2 = 102;
+	kotak_k.c3 = 0;
+	geser(&char_k, -50, 400);
+	draw_polygon(kotak_k, f);
+	draw_polygon(char_k, f);
 
 	while(1) {
 		if(status=='w' && isWValid()==1){
