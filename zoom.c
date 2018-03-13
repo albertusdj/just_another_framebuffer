@@ -163,6 +163,29 @@ void init_polygons(char* filename, int x_resolution, int y_resolution) {
 
 }
 
+char status_change(point p){
+	if(p.y >= 600 && p.y <= 654){
+		if(p.x >= 150 && p.x <= 186){
+			return 'l';
+		}
+		else if(p.x >= 350 && p.x <= 386){
+			return 'k';
+		}
+		else if(p.x >= 550 && p.x <= 586){
+			return 'j';
+		}
+		else if(p.x >= 750 && p.x <= 786){
+			return 'h';
+		}
+		else if(p.x >= 950 && p.x <= 986){
+			return 'g';
+		}
+		else if(p.x >= 1150 && p.x <= 1186){
+			return 'f';
+		}
+	}
+}
+
 polygon viewport(polygon p) {
 	// Initate variables
 	int xwmin = window.arr[0][0];
@@ -476,6 +499,9 @@ void* mouse_handler(void* arg){
 		                drawCrosshair(crosshair, crosshair_radius, f);
 		            }
 
+		            if(left > 0){
+		            	status = status_change(crosshair);
+		            }
             
         		}
 		    }   
@@ -518,6 +544,15 @@ void geser(polygon *p, int x, int y){
 int main() {
 
 	f = init();
+
+	polygon logo = create_polygon_from_file("logo_scanline.txt", 0, 0, 255, 1366, 768);
+	geser(&logo, 300, 30);
+	draw_polygon(logo, f);
+	drawToScreen(&f);
+
+	sleep(3);
+
+	clear_all(&f);
 	
 	world = create_polygon_from_file("frame_world_test.txt", 255, 255, 255, 1366, 768);
 	window_origin = create_polygon_from_file("frame_window_test.txt", 255, 255, 255, 1366, 768);
@@ -572,101 +607,115 @@ int main() {
 	geser(&char_1, -45, 405);
 	draw_polygon(kotak_1, f);
 	draw_polygon(char_1, f);
+	release_memory(&char_1);
+	release_memory(&kotak_1);
 
-	// Draw second button
-	polygon char_2 = create_polygon_from_file("huruf/j.txt", 255, 255, 255, 1366, 768);
-	polygon kotak_2;
-	allocate_memory(&kotak_2, 4);
-	kotak_2.arr[0][0] = 350;
-	kotak_2.arr[0][1] = 600;
-	kotak_2.arr[1][0] = 386;
-	kotak_2.arr[1][1] = 600;
-	kotak_2.arr[2][0] = 386;
-	kotak_2.arr[2][1] = 654;
-	kotak_2.arr[3][0] = 350;
-	kotak_2.arr[3][1] = 654;
-	kotak_2.c1 = 255;
-	kotak_2.c2 = 102;
-	kotak_2.c3 = 0;
-	geser(&char_2, 155, 405);
-	draw_polygon(kotak_2, f);
-	draw_polygon(char_2, f);
+	// // Draw second button
+	char_1 = create_polygon_from_file("huruf/j.txt", 255, 255, 255, 1366, 768);
+	kotak_1;
+	allocate_memory(&kotak_1, 4);
+	kotak_1.arr[0][0] = 350;
+	kotak_1.arr[0][1] = 600;
+	kotak_1.arr[1][0] = 386;
+	kotak_1.arr[1][1] = 600;
+	kotak_1.arr[2][0] = 386;
+	kotak_1.arr[2][1] = 654;
+	kotak_1.arr[3][0] = 350;
+	kotak_1.arr[3][1] = 654;
+	kotak_1.c1 = 255;
+	kotak_1.c2 = 102;
+	kotak_1.c3 = 0;
+	geser(&char_1, 155, 405);
+	draw_polygon(kotak_1, f);
+	draw_polygon(char_1, f);
+	release_memory(&char_1);
+	release_memory(&kotak_1);
 
-	// Draw third button
-	polygon char_3 = create_polygon_from_file("huruf/j.txt", 255, 255, 255, 1366, 768);
-	polygon kotak_3;
-	allocate_memory(&kotak_3, 4);
-	kotak_3.arr[0][0] = 550;
-	kotak_3.arr[0][1] = 600;
-	kotak_3.arr[1][0] = 586;
-	kotak_3.arr[1][1] = 600;
-	kotak_3.arr[2][0] = 586;
-	kotak_3.arr[2][1] = 654;
-	kotak_3.arr[3][0] = 550;
-	kotak_3.arr[3][1] = 654;
-	kotak_3.c1 = 255;
-	kotak_3.c2 = 102;
-	kotak_3.c3 = 0;
-	geser(&char_3, 355, 405);
-	draw_polygon(kotak_3, f);
-	draw_polygon(char_3, f);
+	// // Draw third button
+	char_1 = create_polygon_from_file("huruf/p.txt", 255, 255, 255, 1366, 768);
+	kotak_1;
+	allocate_memory(&kotak_1, 4);
+	kotak_1.arr[0][0] = 550;
+	kotak_1.arr[0][1] = 600;
+	kotak_1.arr[1][0] = 586;
+	kotak_1.arr[1][1] = 600;
+	kotak_1.arr[2][0] = 586;
+	kotak_1.arr[2][1] = 654;
+	kotak_1.arr[3][0] = 550;
+	kotak_1.arr[3][1] = 654;
+	kotak_1.c1 = 255;
+	kotak_1.c2 = 102;
+	kotak_1.c3 = 0;
+	geser(&char_1, 355, 405);
+	draw_polygon(kotak_1, f);
+	draw_polygon(char_1, f);
+	release_memory(&char_1);
+	release_memory(&kotak_1);
 
-	// Draw fourth button
-	polygon char_4 = create_polygon_from_file("huruf/j.txt", 255, 255, 255, 1366, 768);
-	polygon kotak_4;
-	allocate_memory(&kotak_4, 4);
-	kotak_4.arr[0][0] = 750;
-	kotak_4.arr[0][1] = 600;
-	kotak_4.arr[1][0] = 786;
-	kotak_4.arr[1][1] = 600;
-	kotak_4.arr[2][0] = 786;
-	kotak_4.arr[2][1] = 654;
-	kotak_4.arr[3][0] = 750;
-	kotak_4.arr[3][1] = 654;
-	kotak_4.c1 = 255;
-	kotak_4.c2 = 102;
-	kotak_4.c3 = 0;
-	geser(&char_4, 555, 405);
-	draw_polygon(kotak_4, f);
-	draw_polygon(char_4, f);
+	// // Draw fourth button
+	char_1 = create_polygon_from_file("huruf/h.txt", 255, 255, 255, 1366, 768);
+	kotak_1;
+	allocate_memory(&kotak_1, 4);
+	kotak_1.arr[0][0] = 750;
+	kotak_1.arr[0][1] = 600;
+	kotak_1.arr[1][0] = 786;
+	kotak_1.arr[1][1] = 600;
+	kotak_1.arr[2][0] = 786;
+	kotak_1.arr[2][1] = 654;
+	kotak_1.arr[3][0] = 750;
+	kotak_1.arr[3][1] = 654;
+	kotak_1.c1 = 255;
+	kotak_1.c2 = 102;
+	kotak_1.c3 = 0;
+	geser(&char_1, 555, 405);
+	draw_polygon(kotak_1, f);
+	draw_polygon(char_1, f);
+	release_memory(&char_1);
+	release_memory(&kotak_1);
 
-	// Draw fifth button
-	polygon char_5 = create_polygon_from_file("huruf/j.txt", 255, 255, 255, 1366, 768);
-	polygon kotak_5;
-	allocate_memory(&kotak_5, 4);
-	kotak_5.arr[0][0] = 950;
-	kotak_5.arr[0][1] = 600;
-	kotak_5.arr[1][0] = 986;
-	kotak_5.arr[1][1] = 600;
-	kotak_5.arr[2][0] = 986;
-	kotak_5.arr[2][1] = 654;
-	kotak_5.arr[3][0] = 950;
-	kotak_5.arr[3][1] = 654;
-	kotak_5.c1 = 255;
-	kotak_5.c2 = 102;
-	kotak_5.c3 = 0;
-	geser(&char_5, 755, 405);
-	draw_polygon(kotak_5, f);
-	draw_polygon(char_5, f);
+	// // Draw fifth button
+	char_1 = create_polygon_from_file("huruf/a.txt", 255, 255, 255, 1366, 768);
+	kotak_1;
+	allocate_memory(&kotak_1, 4);
+	kotak_1.arr[0][0] = 950;
+	kotak_1.arr[0][1] = 600;
+	kotak_1.arr[1][0] = 986;
+	kotak_1.arr[1][1] = 600;
+	kotak_1.arr[2][0] = 986;
+	kotak_1.arr[2][1] = 654;
+	kotak_1.arr[3][0] = 950;
+	kotak_1.arr[3][1] = 654;
+	kotak_1.c1 = 255;
+	kotak_1.c2 = 102;
+	kotak_1.c3 = 0;
+	geser(&char_1, 755, 405);
+	draw_polygon(kotak_1, f);
+	draw_polygon(char_1, f);
+	release_memory(&char_1);
+	release_memory(&kotak_1);
 
 	// Draw sixth button
-	polygon char_6 = create_polygon_from_file("huruf/j.txt", 255, 255, 255, 1366, 768);
-	polygon kotak_6;
-	allocate_memory(&kotak_6, 4);
-	kotak_6.arr[0][0] = 1150;
-	kotak_6.arr[0][1] = 600;
-	kotak_6.arr[1][0] = 1186;
-	kotak_6.arr[1][1] = 600;
-	kotak_6.arr[2][0] = 1186;
-	kotak_6.arr[2][1] = 654;
-	kotak_6.arr[3][0] = 1150;
-	kotak_6.arr[3][1] = 654;
-	kotak_6.c1 = 255;
-	kotak_6.c2 = 102;
-	kotak_6.c3 = 0;
-	geser(&char_6, 955, 405);
-	draw_polygon(kotak_6, f);
-	draw_polygon(char_6, f);
+	char_1 = create_polygon_from_file("huruf/g.txt", 255, 255, 255, 1366, 768);
+	kotak_1;
+	allocate_memory(&kotak_1, 4);
+	kotak_1.arr[0][0] = 1150;
+	kotak_1.arr[0][1] = 600;
+	kotak_1.arr[1][0] = 1186;
+	kotak_1.arr[1][1] = 600;
+	kotak_1.arr[2][0] = 1186;
+	kotak_1.arr[2][1] = 654;
+	kotak_1.arr[3][0] = 1150;
+	kotak_1.arr[3][1] = 654;
+	kotak_1.c1 = 255;
+	kotak_1.c2 = 102;
+	kotak_1.c3 = 0;
+	geser(&char_1, 955, 405);
+	draw_polygon(kotak_1, f);
+	draw_polygon(char_1, f);
+	release_memory(&char_1);
+	release_memory(&kotak_1);
+
+	drawToScreen(&f);
 
 	while(1) {
 		if(status=='w' && isWValid()==1){

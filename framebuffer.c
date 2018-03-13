@@ -64,3 +64,8 @@ framebuffer init(){
 void drawToScreen(framebuffer *f){
     memcpy(f->real_screen, f->fbp, f->screensize);
 }
+
+void clear_all(framebuffer *f){
+    memset(f->fbp, 0, f->screensize);
+    memset(f->real_screen, 0, f->screensize);
+}

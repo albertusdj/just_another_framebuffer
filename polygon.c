@@ -353,3 +353,11 @@ polygon rotate(polygon pol, int x_center, int y_center) {
 
     return res;
 }
+
+void release_memory(polygon *pol){
+	for (int i=0; i<(pol->size+1); i++){
+         free(pol->arr[i]);
+    }
+
+    free(pol->arr);
+}

@@ -41,4 +41,6 @@ polygon translate(polygon pol, polygon frame, int x_distance, int y_distance);
 
 polygon rotate(polygon pol, int x_center, int y_center);
 
+void release_memory(polygon *pol);
+
 #endif

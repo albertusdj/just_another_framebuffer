@@ -26,4 +26,6 @@ framebuffer init();
 
 void drawToScreen(framebuffer *f);
 
+void clear_all(framebuffer *f);
+
 #endif
